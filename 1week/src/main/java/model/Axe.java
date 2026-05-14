@@ -1,29 +1,28 @@
 package model;
 
-import java.util.Random;
 import java.util.Scanner;
 
-public class Sword extends Enhence {
-    public Sword(String name, int price, Scanner scanner) {
+public class Axe extends Enhence{
+    public Axe(String name, int price, Scanner scanner) {
         super(name, price, scanner);
     }
 
     @Override
     public void getInfo() {
         super.getInfo();
-        System.out.println("종류 : 검");
+        System.out.println("종류 : 도끼");
     }
 
     @Override
     public void setName(Scanner scanner) {
-        System.out.print("새로운 검 이름을 정해주세요. : ");
+        System.out.print("새로운 도끼 이름을 정해주세요. : ");
         super.setName(scanner);
     }
 
     @Override
     public void sell() {
         try{
-            System.out.print("검을 판매합니다.");
+            System.out.print("도끼를 판매합니다.");
             Thread.sleep(500);
             super.sell();
         } catch (InterruptedException e) {

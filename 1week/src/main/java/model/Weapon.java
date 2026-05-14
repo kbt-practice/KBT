@@ -19,7 +19,7 @@ public class Weapon {
         System.out.println("가격 : " + priceSetting()  + "원");
     }
 
-    private int priceSetting() {
+    int priceSetting() {
         return (int)(price + Math.pow(2, level) * 1000);
     }
 

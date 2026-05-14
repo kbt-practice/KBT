@@ -1,9 +1,8 @@
 package model;
 
-import java.util.Random;
 import java.util.Scanner;
 
-public class Sword extends Enhence {
+public class Sword extends Enhance {
     public Sword(String name, int price, Scanner scanner) {
         super(name, price, scanner);
     }

@@ -3,7 +3,7 @@ package model;
 import java.util.Random;
 import java.util.Scanner;
 
-public class Enhence extends Weapon{
+public class Enhance extends Weapon{
     private double percentage;
     private Scanner scanner;
 
@@ -13,7 +13,7 @@ public class Enhence extends Weapon{
         reset();
     }
 
-    public Enhence(String name, int price, Scanner scanner) {
+    public Enhance(String name, int price, Scanner scanner) {
         super(name, price);
         this.percentage = 0.8;
         this.scanner = scanner;

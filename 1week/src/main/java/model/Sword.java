@@ -2,7 +2,7 @@ package model;
 
 import java.util.Scanner;
 
-public class Sword extends Enhance {
+public class Sword extends Weapon {
     public Sword(String name, int price, Scanner scanner) {
         super(name, price, scanner);
     }

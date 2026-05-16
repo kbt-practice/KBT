@@ -1,13 +1,13 @@
 import model.Axe;
 import model.Sword;
+import model.Weapon;
 
 import java.util.Scanner;
 
 public class Main {
     public static void main() {
         Scanner scanner = new Scanner(System.in);
-        Sword sword = null;
-        Axe axe = null;
+        int balance = 0; // 게임 내 전체 잔액
 
         System.out.println("----- 무 기 선 택 -----");
         System.out.println(" 1. 검");
@@ -17,12 +17,23 @@ public class Main {
         int weaponType = scanner.nextInt();
         scanner.nextLine();
 
-        System.out.print("무기 이름을 정해주세요. : ");
+        if (weaponType == 0) {
+            System.out.println("종료합니다.");
+            scanner.close();
+            return;
+        }
+
+        System.out.print("새로운 무기 이름을 정해주세요. : ");
         String inputName = scanner.next();
 
-        if(weaponType == 1) { sword = new Sword(inputName, 0, scanner); }
-        else if (weaponType == 2) { axe = new Axe(inputName, 0, scanner); }
-        else { System.out.println("잘못된 선택입니다. 종료합니다."); }
+        Weapon weapon = null;
+        if(weaponType == 1) { weapon = new Sword(inputName, 0); }
+        else if (weaponType == 2) { weapon = new Axe(inputName, 0); }
+        else {
+            System.out.println("잘못된 선택입니다. 종료합니다.");
+            scanner.close();
+            return;
+        }
 
         while (true) {
             System.out.println("----- M E N U -----");
@@ -35,52 +46,33 @@ public class Main {
             int choiceMenu = scanner.nextInt();
             scanner.nextLine();
 
-            if (weaponType == 1) {
-                switch (choiceMenu) {
-                    case 1:
-                        sword.getInfo();
-                        break;
-                    case 2:
-                        sword.enhance();
-                        break;
-                    case 3:
-                        sword.sell();
-                        sword.setName(scanner);
-                        break;
-                    case 4:
-                        sword.getTotalPrice();
-                        break;
-                    case 0:
-                        System.out.println("종료");
-                        scanner.close();
-                        return;
-                    default:
-                        System.out.println("잘못된 번호를 입력했습니다.");
-                        break;
-                }
-            } else if (weaponType == 2) {
-                switch (choiceMenu) {
-                    case 1:
-                        axe.getInfo();
-                        break;
-                    case 2:
-                        axe.enhance();
-                        break;
-                    case 3:
-                        axe.sell();
-                        axe.setName(scanner);
-                        break;
-                    case 4:
-                        axe.getTotalPrice();
-                        break;
-                    case 0:
-                        System.out.println("종료");
-                        scanner.close();
-                        return;
-                    default:
-                        System.out.println("잘못된 번호를 입력했습니다.");
-                        break;
-                }
+            switch (choiceMenu) {
+                case 1:
+                    weapon.getInfo();
+                    break;
+                case 2:
+                    weapon.enhance(scanner);
+                    break;
+                case 3:
+                    balance += weapon.sell();
+
+                    System.out.print("새로운 무기 이름을 정해주세요. : ");
+                    String inputNewName = scanner.next();
+                    if (weaponType == 1) weapon = new Sword(inputNewName, 0);
+                    else if (weaponType == 2) weapon = new Axe(inputNewName, 0);
+                    else System.out.println("잘못된 선택입니다.");
+
+                    break;
+                case 4:
+                    System.out.println("잔액 : " + balance + "원");
+                    break;
+                case 0:
+                    System.out.println("종료");
+                    scanner.close();
+                    return;
+                default:
+                    System.out.println("잘못된 번호를 입력했습니다.");
+                    break;
             }
 
             System.out.print("계속 하려면 엔터를 누르세요.");

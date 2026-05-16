@@ -4,6 +4,8 @@ import java.util.Random;
 import java.util.Scanner;
 
 public class Sword extends Weapon {
+    private double percentage = getPercentage();
+
     public Sword(String name, int price) {
         super(name, price);
         this.type = "검"; // 출력 메세지 내 종류 설정
@@ -18,9 +20,9 @@ public class Sword extends Weapon {
                 Thread.sleep(1500);
 
                 if (new Random().nextDouble() < percentage) {
-                    level++;
+                    levelUp();
                     percentage = Math.max(0.1, percentage - 0.1);
-                    System.out.println("강화 성공! (level." + level + ")");
+                    System.out.println("강화 성공! (level." + getLevel() + ")");
                     System.out.println("계속 강화하기 > Enter    메뉴로 돌아가기 > 아무 문자");
                     String input = scanner.nextLine();
                     if (input.isEmpty()) {

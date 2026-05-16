@@ -4,7 +4,7 @@ import java.util.Random;
 import java.util.Scanner;
 
 public class Weapon extends Tool{
-    protected double percentage; // 강화 확률
+    private double percentage; // 강화 확률
     protected String type = "도구"; // 출력 메세지 내 종류 설정
 
     protected Weapon(String name, int price) {
@@ -26,7 +26,7 @@ public class Weapon extends Tool{
 
     // 레벨과 확률 처음으로 초기화 -> 단일 객체 생성하고 그 객체로 프로그램이 이어지기 때문
     protected void reset() {
-        level = 0;
+        resetLevel();
         percentage = 0.8;
     }
 
@@ -44,4 +44,6 @@ public class Weapon extends Tool{
             throw new RuntimeException(e);
         }
     }
+
+    protected double getPercentage() { return percentage;}
 }

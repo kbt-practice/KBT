@@ -25,8 +25,8 @@ public class Axe extends Weapon {
             System.out.println("주사위 결과 : " + randomNum + " (" + (isOdd ? "홀" : "짝") + ")");
 
             if (isOdd == userChoseOdd) {
-                level++;
-                System.out.println("강화 성공! (level." + level + ")");
+                levelUp();
+                System.out.println("강화 성공! (level." + getLevel() + ")");
                 System.out.println("계속 강화하기 > Enter    메뉴로 돌아가기 > 아무 문자");
                 String input = scanner.nextLine();
                 if (input.isEmpty()) {

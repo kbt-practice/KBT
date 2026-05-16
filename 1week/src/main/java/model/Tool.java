@@ -2,7 +2,7 @@ package model;
 
 public class Tool {
     private String name; // 도구 이름
-    protected int level; // 도구 레벨
+    private int level; // 도구 레벨
     private int price; // 도구 가격
 
     protected Tool(String name, int price) {
@@ -23,4 +23,8 @@ public class Tool {
     protected int calculatePrice() {
         return (int)(Math.pow(2, level) * 1000);
     }
+
+    protected void resetLevel() { level = 0; }; // 레벨 초기화
+    protected void levelUp() { level++; }; // 레벨업
+    protected int getLevel() { return level; }; // 레벨조회
 }

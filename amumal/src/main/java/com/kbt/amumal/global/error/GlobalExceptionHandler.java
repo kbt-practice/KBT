@@ -18,7 +18,7 @@ public class GlobalExceptionHandler {
         ErrorCode errorCode = e.getErrorCode();
         return ResponseEntity
                 .status(errorCode.getStatus())
-                .body(ApiResponse.fail(errorCode.getMessage()));
+                .body(ApiResponse.fail(errorCode.getMessage(), Map.of("error", e.getReason())));
     }
 
     // 유효성 검사 예외처리

@@ -3,6 +3,7 @@ package com.kbt.amumal.domain.auth.controller;
 import com.kbt.amumal.domain.auth.dto.AuthReqDTO;
 import com.kbt.amumal.domain.auth.service.AuthService;
 import com.kbt.amumal.global.common.ApiResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -17,7 +18,7 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/")
-    public ApiResponse<?> login(@RequestBody AuthReqDTO.LoginReq request) {
+    public ApiResponse<?> login(@Valid @RequestBody AuthReqDTO.LoginReq request) {
         String userInfo = authService.userLogin(request);
 
         return ApiResponse.success("로그인 성공", Map.of("userId", userInfo));

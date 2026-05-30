@@ -6,7 +6,7 @@ import lombok.*;
 @Setter
 @AllArgsConstructor
 public class User {
-    private int userId;
+    private String userId;
     private String email;
     private String password;
     private String nickname;

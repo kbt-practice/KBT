@@ -25,4 +25,9 @@ public class UserReqDTO {
 
         private String profileImageUrl;
     }
+
+    @Getter
+    public static class userInfoReq {
+        private String userId;
+    }
 }

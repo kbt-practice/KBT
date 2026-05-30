@@ -6,15 +6,14 @@ import org.springframework.stereotype.Repository;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.UUID;
 
 @Repository
 public class UserRepository {
-    private final Map<Integer, User> store = new HashMap<>();
-    private final AtomicInteger countingUserId = new AtomicInteger(1);
+    private final Map<String, User> store = new HashMap<>();
 
     public User save(User user) {
-        int newId = countingUserId.getAndIncrement();
+        String newId = UUID.randomUUID().toString();
         User savedUser = new User(newId, user.getEmail(), user.getPassword(), user.getNickname(), user.getProfileImageUrl());
         store.put(newId, savedUser);
 
@@ -25,5 +24,9 @@ public class UserRepository {
         return store.values().stream()
                 .filter(user -> user.getEmail().equals(email))
                 .findFirst();
+    }
+
+    public Optional<User> findById(String userId) {
+        return Optional.ofNullable(store.get(userId));
     }
 }

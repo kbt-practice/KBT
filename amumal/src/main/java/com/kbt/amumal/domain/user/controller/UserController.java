@@ -23,8 +23,8 @@ public class UserController {
     }
 
     @GetMapping("/")
-    public ApiResponse<UserResDTO.userInfoRes> getUser(@RequestHeader("userId") String userId) {
-        UserResDTO.userInfoRes userInfo = userService.get(userId);
+    public ApiResponse<UserResDTO.userInfoRes> getUser(@RequestHeader("userId") UserReqDTO.userInfoReq request) {
+        UserResDTO.userInfoRes userInfo = userService.get(request.getUserId());
 
         return ApiResponse.success("유저 조회 성공", userInfo);
     }

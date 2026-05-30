@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 public class AuthService {
     private final UserRepository userRepository;
 
-    public int userLogin(AuthReqDTO.LoginReq request) {
+    public String userLogin(AuthReqDTO.LoginReq request) {
         User loginUser = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new CustomException(ErrorCode.UNAUTHORIZED, "아이디 또는 비밀번호를 확인해주세요."));
 

@@ -18,7 +18,7 @@ public class AuthController {
 
     @PostMapping("/")
     public ApiResponse<?> login(@RequestBody AuthReqDTO.LoginReq request) {
-        int userInfo = authService.userLogin(request);
+        String userInfo = authService.userLogin(request);
 
         return ApiResponse.success("로그인 성공", Map.of("userId", userInfo));
     }

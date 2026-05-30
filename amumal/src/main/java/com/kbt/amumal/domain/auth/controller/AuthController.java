@@ -21,6 +21,6 @@ public class AuthController {
     public ApiResponse<?> login(@Valid @RequestBody AuthReqDTO.LoginReq request) {
         String userInfo = authService.userLogin(request);
 
-        return ApiResponse.success("로그인 성공", Map.of("userId", userInfo));
+        return ApiResponse.success("로그인 성공", Map.of("accessToken", userInfo));
     }
 }

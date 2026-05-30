@@ -24,15 +24,4 @@ public class UserService {
 
         return newUser.getUserId();
     }
-
-    public int userLogin(UserReqDTO.LoginReq request) {
-        User loginUser = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new CustomException(ErrorCode.UNAUTHORIZED, "아이디 또는 비밀번호를 확인해주세요."));
-
-        if (!loginUser.getPassword().equals(request.getPassword())) {
-            throw new CustomException(ErrorCode.UNAUTHORIZED, "아이디 또는 비밀번호를 확인해주세요.");
-        }
-
-        return loginUser.getUserId();
-    }
 }

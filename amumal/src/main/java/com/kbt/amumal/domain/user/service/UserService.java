@@ -20,6 +20,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final ImageHandler fileService;
 
+    // 유저 추가
     public String create(UserReqDTO.Signup request) throws IOException {
         if (userRepository.findByEmail(request.getEmail()).isPresent())
             throw new CustomException(ErrorCode.CONFLICT, "중복된 이메일 입니다."); // 이메일 중복 가입 미허용
@@ -45,6 +46,16 @@ public class UserService {
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "유저 정보를 확인해주세요.")); // 유저 존재 안할 시
 
         return UserResDTO.userInfo.from(user);
+    }
+
+    // 유저 비활성화
+    public void withdrawUser(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "유저 정보를 확인해주세요."));
+
+        // 이미 탈퇴한 유저인지 확인
+        if (user.getDeletedAt() != null)
+            throw new CustomException(ErrorCode.CONFLICT, "이미 탈퇴한 유저입니다.");
     }
 
     // 닉네임 수정

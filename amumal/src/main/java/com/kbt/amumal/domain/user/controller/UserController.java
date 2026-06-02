@@ -50,6 +50,23 @@ public class UserController {
         return ApiResponse.success("유저 조회 성공", userInfo);
     }
 
+    // 회원 탈퇴
+    @PutMapping("/nickname")
+    public ApiResponse<?> withdrawUser(@RequestHeader("Authorization") String authorization) {
+        // 헤더가 없거나 잘못된 요청일 때
+        if (authorization == null || !authorization.startsWith("Bearer ")) {
+            throw new CustomException(ErrorCode.BAD_REQUEST, "유저 정보를 확인해주세요.");
+        }
+
+        // "Bearer <token>" 에서 토큰 추출
+        String token = authorization.replace("Bearer ", "");
+
+        String userId = jwtUtil.getUserId(token);
+        userService.withdrawUser(userId);
+
+        return ApiResponse.success("유저 닉네임 수정 성공", Map.of("userId", userId));
+    }
+
     // 닉네임 수정
     @PutMapping("/nickname")
     public ApiResponse<?> updateUserNickname(@RequestHeader("Authorization") String authorization, @RequestBody @Valid UserReqDTO.UpdateNickname request) {

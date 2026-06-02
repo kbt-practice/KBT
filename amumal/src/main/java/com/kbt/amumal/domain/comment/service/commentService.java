@@ -24,7 +24,7 @@ public class commentService {
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "게시글 또는 유저 정보를 확인해 주세요."));
 
         if (post.getDeletedAt() != null)
-            throw new CustomException(ErrorCode.NOT_FOUND, "삭제된 게시글입니다.");
+            throw new CustomException(ErrorCode.NOT_FOUND, "이미 삭제된 게시글입니다.");
 
         Comment newComment = commentRepository.save(Comment.builder()
                 .content(request.getContent())
@@ -38,10 +38,10 @@ public class commentService {
     // 댓글 수정
     public void update(String userId, Integer commentId, CommentReqDTO.updateComment request) {
         Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "댓글 또는 유저 정보를 확인해주세요."));
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "게시글 정보를 확인해주세요."));
 
         if (comment.getDeletedAt() != null)
-            throw new CustomException(ErrorCode.NOT_FOUND, "삭제된 댓글입니다.");
+            throw new CustomException(ErrorCode.NOT_FOUND, "이미 삭제된 댓글입니다.");
 
         if (!comment.getUserId().equals(userId))
             throw new CustomException(ErrorCode.FORBIDDEN, "유저 정보를 확인해주세요.");
@@ -52,7 +52,7 @@ public class commentService {
     // 댓글 삭제
     public void delete(String userId, Integer commentId) {
         Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "댓글 또는 유저 정보를 확인해주세요."));
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "게시글 정보를 확인해주세요."));
 
         if (comment.getDeletedAt() != null)
             throw new CustomException(ErrorCode.NOT_FOUND, "이미 삭제된 댓글입니다.");

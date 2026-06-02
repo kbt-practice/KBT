@@ -3,6 +3,7 @@ package com.kbt.amumal.domain.post.entity;
 import com.kbt.amumal.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.Builder;
 
 @Entity
 @Table(name = "posts")
@@ -24,8 +25,12 @@ public class Post extends BaseEntity {
     @Column(length = 500)
     private String postImageUrl;
 
-    @Column(length = 50)
+    @Column(length = 36)
     private String userId;
+
+    @Builder.Default
+    @Column(nullable = false, columnDefinition = "INT DEFAULT 0")
+    private int viewCount = 0;
 
     public void updateTitle(String title) {
         this.title = title;
@@ -37,5 +42,9 @@ public class Post extends BaseEntity {
 
     public void updatePostImage(String imageUrl) {
         this.postImageUrl = imageUrl;
+    }
+
+    public void incrementViewCount() {
+        this.viewCount++;
     }
 }

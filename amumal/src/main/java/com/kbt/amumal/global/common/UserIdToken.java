@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 public class UserIdToken {
     private final JwtUtil jwtUtil;
 
-    public String getUserIdByToken(String authorization) {   // ← public
+    public String getUserIdByToken(String authorization) {
         if (authorization == null || !authorization.startsWith("Bearer "))
             throw new CustomException(ErrorCode.BAD_REQUEST, "유저 정보를 확인해주세요.");
 

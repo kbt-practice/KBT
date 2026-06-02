@@ -18,7 +18,7 @@ public class Comment extends BaseEntity {
     @Column(nullable = false)
     private String content;
 
-    @Column(length = 32)
+    @Column(length = 36)
     private String userId;
 
     @Column(nullable = false)

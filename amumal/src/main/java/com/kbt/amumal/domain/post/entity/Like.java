@@ -1,24 +1,25 @@
 package com.kbt.amumal.domain.post.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 
 @Entity
-@Table(name = "likes")
+@Table(name = "likes", uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "post_id"}))
 @Getter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class Like {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long likeId;
+
+    @Column(nullable = false, length = 36)
+    private String userId;
 
     @Column(nullable = false)
     private Integer postId;
-
-    @Column(nullable = false, length = 32)
-    private String userId;
 }

@@ -5,9 +5,6 @@ import com.kbt.amumal.domain.post.dto.PostResDTO;
 import com.kbt.amumal.domain.post.service.PostService;
 import com.kbt.amumal.global.common.ApiResponse;
 import com.kbt.amumal.global.common.UserIdToken;
-import com.kbt.amumal.global.error.CustomException;
-import com.kbt.amumal.global.error.ErrorCode;
-import com.kbt.amumal.global.util.JwtUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -56,11 +53,32 @@ public class PostController {
         return ApiResponse.success("게시글 삭제 성공", Map.of("postId", postId));
     }
 
-    // 게시글 조회
+    // 게시글 상세 조회
     @GetMapping(value = "/{postId}")
-    public ApiResponse<?> newPost(@PathVariable Integer postId) {
-        PostResDTO.postInfo postInfo = postService.get(postId);
+    public ApiResponse<?> getPost(@PathVariable Integer postId) {
+        PostResDTO.postDetailResponse postDetail = postService.get(postId);
 
-        return ApiResponse.success("게시글 상세 조회 성공", postInfo);
+        return ApiResponse.success("게시글 상세 조회 성공", Map.of("post", postDetail));
+    }
+
+    // 게시글 목록 조회
+    @GetMapping
+    public ApiResponse<?> getPostList(
+            @RequestParam(defaultValue = "0") Integer cursor,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        PostResDTO.postListResponse postList = postService.getList(cursor, size);
+        return ApiResponse.success("전체 게시글 목록 조회 성공", postList);
+    }
+
+    // 게시글 좋아요 토글
+    @PostMapping("/{postId}/like")
+    public ApiResponse<?> toggleLike(
+            @RequestHeader("Authorization") String authorization,
+            @PathVariable Integer postId
+    ) {
+        String userId = userIdToken.getUserIdByToken(authorization);
+        PostResDTO.likeResult statusLike = postService.toggleLike(userId, postId);
+        return ApiResponse.success("게시글 좋아요 처리 성공", statusLike);
     }
 }

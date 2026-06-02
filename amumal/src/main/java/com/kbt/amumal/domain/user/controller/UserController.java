@@ -64,7 +64,7 @@ public class UserController {
         String userId = jwtUtil.getUserId(token);
         userService.withdrawUser(userId);
 
-        return ApiResponse.success("유저 닉네임 수정 성공", Map.of("userId", userId));
+        return ApiResponse.success("유저 탈퇴(비활성화) 성공", Map.of("userId", userId));
     }
 
     // 닉네임 수정

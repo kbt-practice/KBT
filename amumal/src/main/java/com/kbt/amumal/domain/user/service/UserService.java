@@ -57,4 +57,12 @@ public class UserService {
 
         user.updateNickname(nickname);
     }
+
+    // 비밀번호 수정
+    public void updatePassword(String userId, String password) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "유저 정보를 확인해주세요.")); // 유저 존재 안할 시
+
+        user.updatePassword(password);
+    }
 }

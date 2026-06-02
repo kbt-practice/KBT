@@ -51,7 +51,7 @@ public class UserController {
 
     // 닉네임 수정
     @PutMapping("/nickname")
-    public ApiResponse<?> updateUser(@RequestHeader("Authorization") String authorization, @RequestBody @Valid UserReqDTO.UpdateNickname request) {
+    public ApiResponse<?> updateUserNickname(@RequestHeader("Authorization") String authorization, @RequestBody @Valid UserReqDTO.UpdateNickname request) {
         // 헤더가 없거나 잘못된 요청일 때
         if (authorization == null || !authorization.startsWith("Bearer ")) {
             throw new CustomException(ErrorCode.BAD_REQUEST, "유저 정보를 확인해주세요.");
@@ -67,5 +67,25 @@ public class UserController {
         userService.updateNickname(userId, request.getNickname());
 
         return ApiResponse.success("유저 닉네임 수정 성공", Map.of("userId", userId));
+    }
+
+    // 비밀번호 수정
+    @PutMapping("/password")
+    public ApiResponse<?> updateUserPassword(@RequestHeader("Authorization") String authorization, @RequestBody @Valid UserReqDTO.UpdatePassword request) {
+        // 헤더가 없거나 잘못된 요청일 때
+        if (authorization == null || !authorization.startsWith("Bearer ")) {
+            throw new CustomException(ErrorCode.BAD_REQUEST, "유저 정보를 확인해주세요.");
+        }
+
+        // "Bearer <token>" 에서 토큰 추출
+        String token = authorization.replace("Bearer ", "");
+
+        if (!jwtUtil.validateToken(token))
+            throw new CustomException(ErrorCode.UNAUTHORIZED, "유저 정보를 확인해주세요.");
+
+        String userId = jwtUtil.getUserId(token);
+        userService.updatePassword(userId, request.getPassword());
+
+        return ApiResponse.success("유저 비밀번호 수정 성공", Map.of("userId", userId));
     }
 }

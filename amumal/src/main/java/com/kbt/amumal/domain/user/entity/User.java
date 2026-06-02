@@ -12,6 +12,7 @@ import lombok.*;
 @AllArgsConstructor
 public class User {
     @Id
+    @Column(length = 36)
     @GeneratedValue(strategy = GenerationType.UUID)
     private String userId;
 
@@ -26,4 +27,8 @@ public class User {
 
     @Column(length = 500)
     private String profileImageUrl;
+
+    public void updateNickname(String nickname) {
+        this.nickname = nickname;
+    }
 }

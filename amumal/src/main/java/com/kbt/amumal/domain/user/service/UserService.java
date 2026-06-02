@@ -9,16 +9,18 @@ import com.kbt.amumal.global.error.ErrorCode;
 import com.kbt.amumal.global.common.ImageHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
     private final ImageHandler fileService;
 
-    public String create(UserReqDTO.SignupReq request) throws IOException {
+    public String create(UserReqDTO.Signup request) throws IOException {
         if (userRepository.findByEmail(request.getEmail()).isPresent())
             throw new CustomException(ErrorCode.CONFLICT, "중복된 이메일 입니다."); // 이메일 중복 가입 미허용
 
@@ -37,10 +39,22 @@ public class UserService {
         return newUser.getUserId();
     }
 
-    public UserResDTO.userInfoRes get(String userId) {
+    // 유저 정보 조회
+    public UserResDTO.userInfo get(String userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "존재하지 않는 유저입니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "유저 정보를 확인해주세요.")); // 유저 존재 안할 시
 
-        return UserResDTO.userInfoRes.from(user);
+        return UserResDTO.userInfo.from(user);
+    }
+
+    // 닉네임 수정
+    public void updateNickname(String userId, String nickname) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "유저 정보를 확인해주세요.")); // 유저 존재 안할 시
+
+        if (userRepository.findByNickname(nickname).isPresent())
+            throw new CustomException(ErrorCode.CONFLICT, "중복된 닉네임 입니다."); // 닉네임 중복 설정 미허용
+
+        user.updateNickname(nickname);
     }
 }

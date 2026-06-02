@@ -8,8 +8,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class UserReqDTO {
     // 회원가입 요청 DTO
     @Getter
-    @Setter
-    public static class SignupReq {
+    public static class Signup {
         @NotBlank(message = "이메일을 입력해주세요.")
         @Email(message = "올바른 이메일 주소 형식을 입력해주세요. (예: example@example.com)")
         private String email;
@@ -30,7 +29,9 @@ public class UserReqDTO {
     }
 
     @Getter
-    public static class userInfoReq {
-        private String userId;
+    public static class UpdateNickname {
+        @NotBlank(message = "닉네임은 필수입니다.")
+        @Size(max = 10, message = "닉네임은 최대 10자 까지 작성 가능합니다.")
+        private String nickname;
     }
 }

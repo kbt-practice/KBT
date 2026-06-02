@@ -7,6 +7,7 @@ import com.kbt.amumal.global.error.CustomException;
 import com.kbt.amumal.global.error.ErrorCode;
 import com.kbt.amumal.global.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -14,12 +15,13 @@ import org.springframework.stereotype.Service;
 public class AuthService {
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
+    private final PasswordEncoder passwordEncoder;
 
     public String userLogin(AuthReqDTO.LoginReq request) {
         User loginUser = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new CustomException(ErrorCode.UNAUTHORIZED, "아이디 또는 비밀번호를 확인해주세요."));
 
-        if (!loginUser.getPassword().equals(request.getPassword())) {
+        if (!passwordEncoder.matches(request.getPassword(), loginUser.getPassword())) {
             throw new CustomException(ErrorCode.UNAUTHORIZED, "아이디 또는 비밀번호를 확인해주세요.");
         }
 

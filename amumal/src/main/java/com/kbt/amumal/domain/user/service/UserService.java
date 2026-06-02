@@ -8,6 +8,7 @@ import com.kbt.amumal.global.error.CustomException;
 import com.kbt.amumal.global.error.ErrorCode;
 import com.kbt.amumal.global.common.ImageHandler;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +20,7 @@ import java.io.IOException;
 public class UserService {
     private final UserRepository userRepository;
     private final ImageHandler fileService;
+    private final PasswordEncoder passwordEncoder;
 
     // 유저 추가
     public String create(UserReqDTO.Signup request) throws IOException {
@@ -32,7 +34,7 @@ public class UserService {
 
         User newUser = userRepository.save(User.builder()
                 .email(request.getEmail())
-                .password(request.getPassword())
+                .password(passwordEncoder.encode(request.getPassword()))
                 .nickname(request.getNickname())
                 .profileImageUrl(profileImageUrl)
                 .build());
@@ -76,7 +78,7 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "유저 정보를 확인해주세요.")); // 유저 존재 안할 시
 
-        user.updatePassword(request.getPassword());
+        user.updatePassword(passwordEncoder.encode(request.getPassword()));
     }
 
     // 프로필 이미지 수정

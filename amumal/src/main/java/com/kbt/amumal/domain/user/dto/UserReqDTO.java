@@ -8,6 +8,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class UserReqDTO {
     // 회원가입 요청 DTO
     @Getter
+    @Setter
     public static class Signup {
         @NotBlank(message = "이메일을 입력해주세요.")
         @Email(message = "올바른 이메일 주소 형식을 입력해주세요. (예: example@example.com)")
@@ -43,5 +44,11 @@ public class UserReqDTO {
                 message = "비밀번호는 8자 이상, 20자 이하이며, 대문자, 소문자, 숫자, 특수문자를 각각 최소 1개 포함해야 합니다."
         )
         private String password;
+    }
+
+    @Getter
+    @Setter
+    public static class updateProfile {
+        private MultipartFile profileImage;
     }
 }

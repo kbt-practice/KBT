@@ -48,21 +48,31 @@ public class UserService {
     }
 
     // 닉네임 수정
-    public void updateNickname(String userId, String nickname) {
+    public void updateNickname(String userId, UserReqDTO.UpdateNickname request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "유저 정보를 확인해주세요.")); // 유저 존재 안할 시
 
-        if (userRepository.findByNickname(nickname).isPresent())
+        if (userRepository.findByNickname(request.getNickname()).isPresent())
             throw new CustomException(ErrorCode.CONFLICT, "중복된 닉네임 입니다."); // 닉네임 중복 설정 미허용
 
-        user.updateNickname(nickname);
+        user.updateNickname(request.getNickname());
     }
 
     // 비밀번호 수정
-    public void updatePassword(String userId, String password) {
+    public void updatePassword(String userId, UserReqDTO.UpdatePassword request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "유저 정보를 확인해주세요.")); // 유저 존재 안할 시
 
-        user.updatePassword(password);
+        user.updatePassword(request.getPassword());
+    }
+
+    // 프로필 이미지 수정
+    public void updateProfileImage(String userId, UserReqDTO.updateProfile request) throws IOException {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "유저 정보를 확인해주세요.")); // 유저 존재 안할 시
+
+        String profileImageUrl = fileService.save(request.getProfileImage());
+
+        user.updateProfileImage(profileImageUrl);
     }
 }

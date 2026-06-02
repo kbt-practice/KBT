@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.StreamingHttpOutputMessage;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.Map;
 
 @RestController
@@ -23,7 +24,7 @@ public class UserController {
 
     // 회원 가입
     @PostMapping(value = "/", consumes = "multipart/form-data")
-    public ApiResponse<?> signup(@Valid @ModelAttribute UserReqDTO.Signup request) throws java.io.IOException {
+    public ApiResponse<?> signup(@Valid @ModelAttribute UserReqDTO.Signup request) throws IOException {
         String newUserId = userService.create(request);
 
         return ApiResponse.success("회원가입 성공", Map.of("userId", newUserId));
@@ -64,7 +65,7 @@ public class UserController {
             throw new CustomException(ErrorCode.UNAUTHORIZED, "유저 정보를 확인해주세요.");
 
         String userId = jwtUtil.getUserId(token);
-        userService.updateNickname(userId, request.getNickname());
+        userService.updateNickname(userId, request);
 
         return ApiResponse.success("유저 닉네임 수정 성공", Map.of("userId", userId));
     }
@@ -84,8 +85,28 @@ public class UserController {
             throw new CustomException(ErrorCode.UNAUTHORIZED, "유저 정보를 확인해주세요.");
 
         String userId = jwtUtil.getUserId(token);
-        userService.updatePassword(userId, request.getPassword());
+        userService.updatePassword(userId, request);
 
         return ApiResponse.success("유저 비밀번호 수정 성공", Map.of("userId", userId));
+    }
+
+    // 프로필 이미지 수정
+    @PutMapping("/profileImage")
+    public ApiResponse<?> updateUserProfileImage(@RequestHeader("Authorization") String authorization, @Valid @ModelAttribute UserReqDTO.updateProfile request) throws IOException {
+        // 헤더가 없거나 잘못된 요청일 때
+        if (authorization == null || !authorization.startsWith("Bearer ")) {
+            throw new CustomException(ErrorCode.BAD_REQUEST, "유저 정보를 확인해주세요.");
+        }
+
+        // "Bearer <token>" 에서 토큰 추출
+        String token = authorization.replace("Bearer ", "");
+
+        if (!jwtUtil.validateToken(token))
+            throw new CustomException(ErrorCode.UNAUTHORIZED, "유저 정보를 확인해주세요.");
+
+        String userId = jwtUtil.getUserId(token);
+        userService.updateProfileImage(userId, request);
+
+        return ApiResponse.success("유저 프로필 이미지 수정 성공", Map.of("userId", userId));
     }
 }

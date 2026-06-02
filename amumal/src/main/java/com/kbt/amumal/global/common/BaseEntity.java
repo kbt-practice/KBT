@@ -15,14 +15,14 @@ import java.time.LocalDateTime;
 @EntityListeners(AuditingEntityListener.class)
 public class BaseEntity {
     @CreatedDate // 저장 시 자동 입력
-    @Column(name = "created_at", updatable = false, nullable = false)
+    @Column(name = "created_at", columnDefinition = "TIMESTAMP", updatable = false, nullable = false)
     private LocalDateTime createdAt;
 
     @LastModifiedDate // 수정 시 자동 갱신
-    @Column(name = "updated_at")
+    @Column(name = "updated_at", columnDefinition = "TIMESTAMP")
     private LocalDateTime updatedAt;
 
-    @Column(name = "deleted_at")
+    @Column(name = "deleted_at", columnDefinition = "TIMESTAMP")
     private LocalDateTime deletedAt;
 
     // patch 삭제

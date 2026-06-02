@@ -56,6 +56,8 @@ public class UserService {
         // 이미 탈퇴한 유저인지 확인
         if (user.getDeletedAt() != null)
             throw new CustomException(ErrorCode.CONFLICT, "이미 탈퇴한 유저입니다.");
+
+        user.softDelete();
     }
 
     // 닉네임 수정

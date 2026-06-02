@@ -16,7 +16,7 @@ public class Comment extends BaseEntity {
     private Integer commentId;
 
     @Column(nullable = false)
-    private String comment;
+    private String content;
 
     @Column(length = 32)
     private String userId;
@@ -25,6 +25,6 @@ public class Comment extends BaseEntity {
     private int postId;
 
     public void updateComment(String comment) {
-        this.comment = comment;
+        this.content = comment;
     }
 }

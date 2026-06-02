@@ -9,13 +9,13 @@ public class CommentReqDTO {
     @Setter
     public static class createComment {
         @NotBlank(message = "댓글 내용을 입력해주세요.")
-        private String comment;
+        private String content;
     }
 
     @Getter
     @Setter
     public static class updateComment {
         @NotBlank(message = "댓글 내용을 입력해주세요.")
-        private String comment;
+        private String content;
     }
 }

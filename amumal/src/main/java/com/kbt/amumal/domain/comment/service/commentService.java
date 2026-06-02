@@ -27,7 +27,7 @@ public class commentService {
             throw new CustomException(ErrorCode.NOT_FOUND, "삭제된 게시글입니다.");
 
         Comment newComment = commentRepository.save(Comment.builder()
-                .comment(request.getComment())
+                .content(request.getContent())
                 .userId(userId)
                 .postId(postId)
                 .build());
@@ -46,7 +46,7 @@ public class commentService {
         if (!comment.getUserId().equals(userId))
             throw new CustomException(ErrorCode.FORBIDDEN, "유저 정보를 확인해주세요.");
 
-        comment.updateComment(request.getComment());
+        comment.updateComment(request.getContent());
     }
 
     // 댓글 삭제

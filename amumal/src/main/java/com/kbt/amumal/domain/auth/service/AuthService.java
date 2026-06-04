@@ -26,6 +26,6 @@ public class AuthService {
         }
 
         // 로그인 성공 시 JWT 발급
-        return jwtUtil.createAccessToken(loginUser.getUserId(), loginUser.getEmail());
+        return jwtUtil.createAccessToken(loginUser.getId(), loginUser.getEmail());
     }
 }

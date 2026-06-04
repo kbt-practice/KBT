@@ -22,33 +22,33 @@ public class PostController {
     // 게시글 등록
     @PostMapping(value = "/", consumes = "multipart/form-data")
     public ApiResponse<?> newPost(@RequestHeader("Authorization") String authorization, @Valid @ModelAttribute PostReqDTO.createPost request) throws IOException {
-        String userId = userIdToken.getUserIdByToken(authorization);
-        int newPostId = postService.create(userId, request);
+        int id = userIdToken.getIdByToken(authorization);
+        int newPostId = postService.create(id, request);
 
         return ApiResponse.success("게시글 생성 성공", Map.of("postId", newPostId));
     }
 
     // 게시글 수정
     @PatchMapping(value = "/{postId}", consumes = "multipart/form-data")
-    public ApiResponse<?> newPost(
+    public ApiResponse<?> updatePost(
             @RequestHeader("Authorization") String authorization,
             @Valid @ModelAttribute PostReqDTO.updatePost request,
             @PathVariable Integer postId
     ) throws IOException {
-        String userId = userIdToken.getUserIdByToken(authorization);
-        postService.update(userId, postId, request);
+        int id = userIdToken.getIdByToken(authorization);
+        postService.update(id, postId, request);
 
         return ApiResponse.success("게시글 수정 성공", Map.of("postId", postId));
     }
 
     // 게시글 삭제
     @PatchMapping(value = "/{postId}")
-    public ApiResponse<?> newPost(
+    public ApiResponse<?> deletePost(
             @RequestHeader("Authorization") String authorization,
             @PathVariable Integer postId
     ) {
-        String userId = userIdToken.getUserIdByToken(authorization);
-        postService.delete(userId, postId);
+        int id = userIdToken.getIdByToken(authorization);
+        postService.delete(id, postId);
 
         return ApiResponse.success("게시글 삭제 성공", Map.of("postId", postId));
     }
@@ -77,8 +77,8 @@ public class PostController {
             @RequestHeader("Authorization") String authorization,
             @PathVariable Integer postId
     ) {
-        String userId = userIdToken.getUserIdByToken(authorization);
-        PostResDTO.likeResult statusLike = postService.toggleLike(userId, postId);
+        int id = userIdToken.getIdByToken(authorization);
+        PostResDTO.likeResult statusLike = postService.toggleLike(id, postId);
         return ApiResponse.success("게시글 좋아요 처리 성공", statusLike);
     }
 }

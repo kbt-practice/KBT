@@ -16,8 +16,14 @@ public class ImageHandler {
 
     @Value("${file.upload-dir}")
     private String uploadDir;
+    public String profileSave(MultipartFile file) throws IOException {
+        String filename = UUID.randomUUID() + "_" + file.getOriginalFilename(); // 파일 이름 설정
+        Path imageFilePath = Paths.get(uploadDir, filename); // 파일 경로 설정
+        Files.copy(file.getInputStream(), imageFilePath, StandardCopyOption.REPLACE_EXISTING); // 실제 파일 저장
+        return "/profiles/" + filename; // 클라이언트에서 서버 주소 + 반환값으로 연동
+    }
 
-    public String save(MultipartFile file) throws IOException {
+    public String postSave(MultipartFile file) throws IOException {
         String filename = UUID.randomUUID() + "_" + file.getOriginalFilename(); // 파일 이름 설정
         Path imageFilePath = Paths.get(uploadDir, filename); // 파일 경로 설정
         Files.copy(file.getInputStream(), imageFilePath, StandardCopyOption.REPLACE_EXISTING); // 실제 파일 저장

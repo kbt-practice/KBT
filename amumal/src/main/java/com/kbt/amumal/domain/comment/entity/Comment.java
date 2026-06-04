@@ -18,8 +18,8 @@ public class Comment extends BaseEntity {
     @Column(nullable = false)
     private String content;
 
-    @Column(length = 36)
-    private String userId;
+    @Column(nullable = false)
+    private int userId;
 
     @Column(nullable = false)
     private int postId;

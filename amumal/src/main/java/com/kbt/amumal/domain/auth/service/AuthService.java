@@ -19,13 +19,13 @@ public class AuthService {
 
     public String userLogin(AuthReqDTO.LoginReq request) {
         User loginUser = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new CustomException(ErrorCode.UNAUTHORIZED, "아이디 또는 비밀번호를 확인해주세요."));
+                .orElseThrow(() -> new CustomException(ErrorCode.LOGIN_FAILED));
 
         if (!passwordEncoder.matches(request.getPassword(), loginUser.getPassword())) {
-            throw new CustomException(ErrorCode.UNAUTHORIZED, "아이디 또는 비밀번호를 확인해주세요.");
+            throw new CustomException(ErrorCode.LOGIN_FAILED);
         }
 
         // 로그인 성공 시 JWT 발급
-        return jwtUtil.createAccessToken(loginUser.getUserId(), loginUser.getEmail());
+        return jwtUtil.createAccessToken(loginUser.getId(), loginUser.getEmail());
     }
 }

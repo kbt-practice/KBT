@@ -25,8 +25,8 @@ public class Post extends BaseEntity {
     @Column(length = 500)
     private String postImageUrl;
 
-    @Column(length = 36)
-    private String userId;
+    @Column(nullable = false)
+    private int userId;
 
     @Builder.Default
     @Column(nullable = false, columnDefinition = "INT DEFAULT 0")

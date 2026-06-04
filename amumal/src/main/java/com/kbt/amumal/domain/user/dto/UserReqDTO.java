@@ -8,6 +8,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class UserReqDTO {
     // 회원가입 요청 DTO
     @Getter
+    @Setter
     public static class Signup {
         @NotBlank(message = "이메일을 입력해주세요.")
         @Email(message = "올바른 이메일 주소 형식을 입력해주세요. (예: example@example.com)")

@@ -28,27 +28,27 @@ public class JwtUtil {
     }
 
     // 액세스 토큰 생성
-    public String createAccessToken(String userId, String email) {
-        return createToken(userId, email, accessTokenExpTime);
+    public String createAccessToken(int id, String email) {
+        return createToken(id, email, accessTokenExpTime);
     }
 
     // JWT 생성
-    private String createToken(String userId, String email, long expireTime) {
+    private String createToken(int id, String email, long expireTime) {
         ZonedDateTime now = ZonedDateTime.now();
-        ZonedDateTime tokenValidity = now.plusSeconds(expireTime); // 만료 시각 계산
+        ZonedDateTime tokenValidity = now.plusSeconds(expireTime);
 
         return Jwts.builder()
-                .claim("userId", userId) // 페이로드에 userId 저장
-                .claim("email", email) // 페이로드에 email 저장
-                .setIssuedAt(Date.from(now.toInstant())) // 발급 시간
-                .setExpiration(Date.from(tokenValidity.toInstant())) // 만료 시간
-                .signWith(key, SignatureAlgorithm.HS256) // HS256 서명
+                .claim("id", id)
+                .claim("email", email)
+                .setIssuedAt(Date.from(now.toInstant()))
+                .setExpiration(Date.from(tokenValidity.toInstant()))
+                .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    // 토큰에서 userId 추출
-    public String getUserId(String token) {
-        return parseClaims(token).get("userId", String.class);
+    // 토큰에서 id 추출
+    public int getId(String token) {
+        return parseClaims(token).get("id", Integer.class);
     }
 
     // JWT 유효성 검증
@@ -58,8 +58,10 @@ public class JwtUtil {
             return true;
         } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
             log.info("Invalid JWT Token", e); // 위변조된 토큰
+            throw e;
         } catch (ExpiredJwtException e) {
             log.info("Expired JWT Token", e); // 만료된 토큰
+            throw e;
         } catch (UnsupportedJwtException e) {
             log.info("Unsupported JWT Token", e); // 지원하지 않는 형식
         } catch (IllegalArgumentException e) {

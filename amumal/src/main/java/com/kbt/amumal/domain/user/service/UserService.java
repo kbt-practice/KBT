@@ -22,14 +22,13 @@ public class UserService {
     private final ImageHandler fileService;
     private final PasswordEncoder passwordEncoder;
 
-    // 유저 추가
     public String create(UserReqDTO.Signup request) throws IOException {
         if (userRepository.findByEmail(request.getEmail()).isPresent())
-            throw new CustomException(ErrorCode.CONFLICT, "중복된 이메일 입니다."); // 이메일 중복 가입 미허용
+            throw new CustomException(ErrorCode.DUPLICATE_EMAIL);
 
-        String profileImageUrl = null; // 이미지 없으면 null로 입력
+        String profileImageUrl = null;
         if (request.getProfileImage() != null && !request.getProfileImage().isEmpty()) {
-            profileImageUrl = fileService.save(request.getProfileImage()); // 이미지 있으면 입력된 파일로 입력
+            profileImageUrl = fileService.profileSave(request.getProfileImage());
         }
 
         User newUser = userRepository.save(User.builder()
@@ -42,51 +41,45 @@ public class UserService {
         return newUser.getUserId();
     }
 
-    // 유저 정보 조회
-    public UserResDTO.userInfo get(String userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "유저 정보를 확인해주세요.")); // 유저 존재 안할 시
+    public UserResDTO.userInfo get(int id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         return UserResDTO.userInfo.from(user);
     }
 
-    // 유저 비활성화
-    public void withdrawUser(String userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "유저 정보를 확인해주세요."));
+    public void withdrawUser(int id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-        // 이미 탈퇴한 유저인지 확인
         if (user.getDeletedAt() != null)
-            throw new CustomException(ErrorCode.CONFLICT, "이미 탈퇴한 유저입니다.");
+            throw new CustomException(ErrorCode.USER_ALREADY_WITHDRAWN);
 
         user.softDelete();
     }
 
-    // 닉네임 수정
-    public void updateNickname(String userId, UserReqDTO.UpdateNickname request) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "유저 정보를 확인해주세요.")); // 유저 존재 안할 시
+    public void updateNickname(int id, UserReqDTO.UpdateNickname request) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         if (userRepository.findByNickname(request.getNickname()).isPresent())
-            throw new CustomException(ErrorCode.CONFLICT, "중복된 닉네임 입니다."); // 닉네임 중복 설정 미허용
+            throw new CustomException(ErrorCode.DUPLICATE_NICKNAME);
 
         user.updateNickname(request.getNickname());
     }
 
-    // 비밀번호 수정
-    public void updatePassword(String userId, UserReqDTO.UpdatePassword request) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "유저 정보를 확인해주세요.")); // 유저 존재 안할 시
+    public void updatePassword(int id, UserReqDTO.UpdatePassword request) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         user.updatePassword(passwordEncoder.encode(request.getPassword()));
     }
 
-    // 프로필 이미지 수정
-    public void updateProfileImage(String userId, UserReqDTO.updateProfile request) throws IOException {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "유저 정보를 확인해주세요.")); // 유저 존재 안할 시
+    public void updateProfileImage(int id, UserReqDTO.updateProfile request) throws IOException {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-        String profileImageUrl = fileService.save(request.getProfileImage());
+        String profileImageUrl = fileService.profileSave(request.getProfileImage());
 
         user.updateProfileImage(profileImageUrl);
     }

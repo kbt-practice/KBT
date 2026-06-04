@@ -4,6 +4,8 @@ import com.kbt.amumal.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.UUID;
+
 @Entity
 @Table(name = "users")
 @Getter
@@ -12,8 +14,10 @@ import lombok.*;
 @AllArgsConstructor
 public class User extends BaseEntity {
     @Id
-    @Column(length = 36)
-    @GeneratedValue(strategy = GenerationType.UUID)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
+
+    @Column(length = 36, unique = true, nullable = false)
     private String userId;
 
     @Column(nullable = false, unique = true, length = 50)
@@ -27,6 +31,13 @@ public class User extends BaseEntity {
 
     @Column(length = 500)
     private String profileImageUrl;
+
+    @PrePersist
+    private void generateUserId() {
+        if (userId == null) {
+            userId = UUID.randomUUID().toString();
+        }
+    }
 
     public void updateNickname(String nickname) {
         this.nickname = nickname;

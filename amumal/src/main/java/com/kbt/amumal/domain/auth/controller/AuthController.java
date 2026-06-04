@@ -4,12 +4,9 @@ import com.kbt.amumal.domain.auth.dto.AuthReqDTO;
 import com.kbt.amumal.domain.auth.service.AuthService;
 import com.kbt.amumal.global.common.ApiResponse;
 import com.kbt.amumal.global.common.UserIdToken;
-import com.kbt.amumal.global.error.CustomException;
-import com.kbt.amumal.global.error.ErrorCode;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import com.kbt.amumal.global.util.JwtUtil;
 
 import java.util.Map;
 
@@ -29,11 +26,9 @@ public class AuthController {
 
     @PostMapping("/delete")
     public ApiResponse<?> logout(@RequestHeader("Authorization") String authorization) {
-        String userId = userIdToken.getUserIdByToken(authorization);
+        // 토큰 유효성만 검증, 실제 삭제는 프론트에서 처리
+        userIdToken.getIdByToken(authorization);
 
-        // 프론트가 토큰을 삭제함
-        // 현재 로컬 스토리지로 구현했다고 가정, 쿠키 관련 구현 추후 추가할 예정
-
-        return ApiResponse.success("로그아웃 성공", Map.of("userId", userId));
+        return ApiResponse.success("로그아웃 성공", null);
     }
 }

@@ -24,8 +24,8 @@ public class commentController {
             @PathVariable Integer postId,
             @Valid @RequestBody CommentReqDTO.createComment request
     ) {
-        String userId = userIdToken.getUserIdByToken(authorization);
-        int newCommentId = commentService.create(userId, postId, request);
+        int id = userIdToken.getIdByToken(authorization);
+        int newCommentId = commentService.create(id, postId, request);
 
         return ApiResponse.success("댓글 생성 성공", Map.of("commentId", newCommentId));
     }
@@ -37,8 +37,8 @@ public class commentController {
             @PathVariable Integer commentId,
             @Valid @RequestBody CommentReqDTO.updateComment request
     ) {
-        String userId = userIdToken.getUserIdByToken(authorization);
-        commentService.update(userId, commentId, request);
+        int id = userIdToken.getIdByToken(authorization);
+        commentService.update(id, commentId, request);
 
         return ApiResponse.success("댓글 수정 성공", Map.of("commentId", commentId));
     }
@@ -49,8 +49,8 @@ public class commentController {
             @RequestHeader("Authorization") String authorization,
             @PathVariable Integer commentId
     ) {
-        String userId = userIdToken.getUserIdByToken(authorization);
-        commentService.delete(userId, commentId);
+        int id = userIdToken.getIdByToken(authorization);
+        commentService.delete(id, commentId);
 
         return ApiResponse.success("댓글 삭제 성공", Map.of("commentId", commentId));
     }

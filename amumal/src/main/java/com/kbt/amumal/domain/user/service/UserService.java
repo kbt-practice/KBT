@@ -8,17 +8,22 @@ import com.kbt.amumal.global.error.CustomException;
 import com.kbt.amumal.global.error.ErrorCode;
 import com.kbt.amumal.global.common.ImageHandler;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
     private final ImageHandler fileService;
+    private final PasswordEncoder passwordEncoder;
 
-    public String create(UserReqDTO.SignupReq request) throws IOException {
+    // 유저 추가
+    public String create(UserReqDTO.Signup request) throws IOException {
         if (userRepository.findByEmail(request.getEmail()).isPresent())
             throw new CustomException(ErrorCode.CONFLICT, "중복된 이메일 입니다."); // 이메일 중복 가입 미허용
 
@@ -29,7 +34,7 @@ public class UserService {
 
         User newUser = userRepository.save(User.builder()
                 .email(request.getEmail())
-                .password(request.getPassword())
+                .password(passwordEncoder.encode(request.getPassword()))
                 .nickname(request.getNickname())
                 .profileImageUrl(profileImageUrl)
                 .build());
@@ -37,10 +42,52 @@ public class UserService {
         return newUser.getUserId();
     }
 
-    public UserResDTO.userInfoRes get(String userId) {
+    // 유저 정보 조회
+    public UserResDTO.userInfo get(String userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "존재하지 않는 유저입니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "유저 정보를 확인해주세요.")); // 유저 존재 안할 시
 
-        return UserResDTO.userInfoRes.from(user);
+        return UserResDTO.userInfo.from(user);
+    }
+
+    // 유저 비활성화
+    public void withdrawUser(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "유저 정보를 확인해주세요."));
+
+        // 이미 탈퇴한 유저인지 확인
+        if (user.getDeletedAt() != null)
+            throw new CustomException(ErrorCode.CONFLICT, "이미 탈퇴한 유저입니다.");
+
+        user.softDelete();
+    }
+
+    // 닉네임 수정
+    public void updateNickname(String userId, UserReqDTO.UpdateNickname request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "유저 정보를 확인해주세요.")); // 유저 존재 안할 시
+
+        if (userRepository.findByNickname(request.getNickname()).isPresent())
+            throw new CustomException(ErrorCode.CONFLICT, "중복된 닉네임 입니다."); // 닉네임 중복 설정 미허용
+
+        user.updateNickname(request.getNickname());
+    }
+
+    // 비밀번호 수정
+    public void updatePassword(String userId, UserReqDTO.UpdatePassword request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "유저 정보를 확인해주세요.")); // 유저 존재 안할 시
+
+        user.updatePassword(passwordEncoder.encode(request.getPassword()));
+    }
+
+    // 프로필 이미지 수정
+    public void updateProfileImage(String userId, UserReqDTO.updateProfile request) throws IOException {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "유저 정보를 확인해주세요.")); // 유저 존재 안할 시
+
+        String profileImageUrl = fileService.save(request.getProfileImage());
+
+        user.updateProfileImage(profileImageUrl);
     }
 }

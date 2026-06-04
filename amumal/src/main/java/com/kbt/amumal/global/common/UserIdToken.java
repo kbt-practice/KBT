@@ -13,12 +13,12 @@ public class UserIdToken {
 
     public int getIdByToken(String authorization) {
         if (authorization == null || !authorization.startsWith("Bearer "))
-            throw new CustomException(ErrorCode.BAD_REQUEST, "잘못된 토큰입니다.");
+            throw new CustomException(ErrorCode.TOKEN_INVALID);
 
         String token = authorization.replace("Bearer ", "");
 
         if (!jwtUtil.validateToken(token))
-            throw new CustomException(ErrorCode.BAD_REQUEST, "잘못된 토큰입니다.");
+            throw new CustomException(ErrorCode.TOKEN_INVALID);
 
         return jwtUtil.getId(token);
     }

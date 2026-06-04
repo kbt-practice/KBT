@@ -30,7 +30,6 @@ public class PostService {
     private final UserRepository userRepository;
     private final ImageHandler fileService;
 
-    // 게시글 추가
     public int create(int id, PostReqDTO.createPost request) throws IOException {
         String postImageUrl = null;
         if (request.getPostImage() != null && !request.getPostImage().isEmpty()) {
@@ -47,47 +46,37 @@ public class PostService {
         return newPost.getPostId();
     }
 
-    // 게시글 수정
     public void update(int id, Integer postId, PostReqDTO.updatePost request) throws IOException {
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "게시글 정보를 확인해주세요."));
+                .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
 
-        if (post.getUserId() != id) {
-            throw new CustomException(ErrorCode.FORBIDDEN, "본인 게시글만 수정할 수 있습니다.");
-        }
+        if (post.getUserId() != id)
+            throw new CustomException(ErrorCode.POST_FORBIDDEN_UPDATE);
 
-        if (request.getTitle() != null && !request.getTitle().isBlank()) {
+        if (request.getTitle() != null && !request.getTitle().isBlank())
             post.updateTitle(request.getTitle());
-        }
-        if (request.getContent() != null && !request.getContent().isBlank()) {
+        if (request.getContent() != null && !request.getContent().isBlank())
             post.updateContent(request.getContent());
-        }
-        if (request.getPostImage() != null && !request.getPostImage().isEmpty()) {
-            String imageUrl = fileService.postSave(request.getPostImage());
-            post.updatePostImage(imageUrl);
-        }
+        if (request.getPostImage() != null && !request.getPostImage().isEmpty())
+            post.updatePostImage(fileService.postSave(request.getPostImage()));
     }
 
-    // 게시글 삭제
     public void delete(int id, Integer postId) {
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "게시글 정보를 확인해주세요."));
+                .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
 
-        if (post.getUserId() != id) {
-            throw new CustomException(ErrorCode.FORBIDDEN, "본인 게시글만 삭제할 수 있습니다.");
-        }
+        if (post.getUserId() != id)
+            throw new CustomException(ErrorCode.POST_FORBIDDEN_DELETE);
 
         post.softDelete();
     }
 
-    // 게시글 상세 조회
     public PostResDTO.postDetailResponse get(Integer postId) {
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "게시글 정보를 확인해주세요."));
+                .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
 
-        if (post.getDeletedAt() != null) {
-            throw new CustomException(ErrorCode.NOT_FOUND, "게시글 정보를 확인해주세요.");
-        }
+        if (post.getDeletedAt() != null)
+            throw new CustomException(ErrorCode.POST_ALREADY_DELETED);
 
         post.incrementViewCount();
 
@@ -128,7 +117,6 @@ public class PostService {
                 .build();
     }
 
-    // 게시글 목록 조회 (커서 기반 페이지네이션)
     public PostResDTO.postListResponse getList(Integer cursor, int size) {
         List<Post> posts = postRepository.findPostsWithCursor(cursor, size + 1);
 
@@ -166,16 +154,15 @@ public class PostService {
                 .build();
     }
 
-    // 게시글 좋아요 토글
     public PostResDTO.likeResult toggleLike(int id, Integer postId) {
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "게시글 정보를 확인해주세요."));
+                .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
 
         if (post.getDeletedAt() != null)
-            throw new CustomException(ErrorCode.NOT_FOUND, "게시글 정보를 확인해주세요.");
+            throw new CustomException(ErrorCode.POST_ALREADY_DELETED);
 
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "유저 정보를 확인해주세요."));
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         String type;
         if (likeRepository.existsByUserIdAndPostId(id, postId)) {

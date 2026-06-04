@@ -3,7 +3,7 @@ package com.kbt.amumal.global.error;
 import com.kbt.amumal.global.common.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.validation.BindException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -21,9 +21,9 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.fail(errorCode.getMessage(), Map.of("error", e.getReason())));
     }
 
-    // 유효성 검사 예외처리
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponse<?>> handleValidException(MethodArgumentNotValidException e) {
+    // 유효성 검사 예외처리 (@RequestBody, @ModelAttribute 모두 처리)
+    @ExceptionHandler(BindException.class)
+    public ResponseEntity<ApiResponse<?>> handleValidException(BindException e) {
         Map<String, String> errors = new HashMap<>();
         e.getBindingResult().getFieldErrors()
                 .forEach(error -> errors.put(error.getField(), error.getDefaultMessage()));

@@ -1,13 +1,15 @@
 package com.kbt.amumal.domain.user.controller;
 
 import com.kbt.amumal.domain.user.dto.UserReqDTO;
+import com.kbt.amumal.domain.user.dto.UserResDTO;
 import com.kbt.amumal.domain.user.service.UserService;
 import com.kbt.amumal.global.common.ApiResponse;
+import com.kbt.amumal.global.error.CustomException;
+import com.kbt.amumal.global.error.ErrorCode;
+import com.kbt.amumal.global.util.JwtUtil;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
@@ -16,18 +18,31 @@ import java.util.Map;
 @RequestMapping("/users")
 public class UserController {
     private final UserService userService;
+    private final JwtUtil jwtUtil;
 
-    @PostMapping("/signup")
-    public ApiResponse<?> signup(@RequestBody UserReqDTO.SignupReq request) {
-        int newUserId = userService.create(request);
+    @PostMapping(value = "/", consumes = "multipart/form-data")
+    public ApiResponse<?> signup(@Valid @ModelAttribute UserReqDTO.SignupReq request) throws java.io.IOException {
+        String newUserId = userService.create(request);
 
         return ApiResponse.success("회원가입 성공", Map.of("userId", newUserId));
     }
 
-    @PostMapping("/login")
-    public ApiResponse<?> login(@RequestBody UserReqDTO.LoginReq request) {
-        int userInfo = userService.userLogin(request);
+    @GetMapping("/")
+    public ApiResponse<UserResDTO.userInfoRes> getUser(@RequestHeader("Authorization") String authorization) {
+        // 헤더가 없거나 잘못된 요청일 때
+        if (authorization == null || !authorization.startsWith("Bearer ")) {
+            throw new CustomException(ErrorCode.BAD_REQUEST, "토큰에 오류가 있습니다.");
+        }
 
-        return ApiResponse.success("로그인 성공", Map.of("userId", userInfo));
+        // "Bearer <token>" 에서 토큰 추출
+        String token = authorization.replace("Bearer ", "");
+
+        if (!jwtUtil.validateToken(token))
+            throw new CustomException(ErrorCode.UNAUTHORIZED, "유효하지 않은 토큰입니다.");
+
+        String userId = jwtUtil.getUserId(token);
+        UserResDTO.userInfoRes userInfo = userService.get(userId);
+
+        return ApiResponse.success("유저 조회 성공", userInfo);
     }
 }

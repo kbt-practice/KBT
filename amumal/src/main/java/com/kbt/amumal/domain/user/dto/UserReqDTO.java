@@ -1,11 +1,14 @@
 package com.kbt.amumal.domain.user.dto;
 
 import lombok.Getter;
+import lombok.Setter;
 import jakarta.validation.constraints.*;
+import org.springframework.web.multipart.MultipartFile;
 
 public class UserReqDTO {
     // 회원가입 요청 DTO
     @Getter
+    @Setter
     public static class SignupReq {
         @NotBlank(message = "이메일을 입력해주세요.")
         @Email(message = "올바른 이메일 주소 형식을 입력해주세요. (예: example@example.com)")
@@ -23,17 +26,11 @@ public class UserReqDTO {
         @Pattern(regexp = "^\\S+$", message = "띄어쓰기를 없애주세요.")
         private String nickname;
 
-        private String profileImageUrl;
+        private MultipartFile profileImage;
     }
 
-    // 로그인 요청 DTO
     @Getter
-    public static class LoginReq {
-        @NotBlank(message = "이메일을 입력해주세요.")
-        @Email(message = "올바른 이메일 주소 형식을 입력해주세요. (예: example@adapterz.kr)")
-        private String email;
-
-        @NotBlank(message = "비밀번호를 입력해주세요.")
-        private String password;
+    public static class userInfoReq {
+        private String userId;
     }
 }

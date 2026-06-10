@@ -64,7 +64,7 @@ public class RetentionScheduler {
     }
 
     // 유저 하드 딜리트: 유저 게시글 전체 정리 → 댓글/좋아요 정리 → 프로필 이미지 → 유저
-    private void hardDeleteUser(User user) {
+private void hardDeleteUser(User user) {
         // 소프트 딜리트 여부 무관하게 유저의 모든 게시글 처리
         List<Post> userPosts = postRepository.findByUserId(user.getId());
         for (Post post : userPosts) {

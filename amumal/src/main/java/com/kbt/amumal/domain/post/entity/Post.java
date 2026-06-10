@@ -47,4 +47,8 @@ public class Post extends BaseEntity {
     public void incrementViewCount() {
         this.viewCount++;
     }
+
+    public void clearPostImage() {
+        this.postImageUrl = null;
+    }
 }

@@ -10,7 +10,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.UUID;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 public class ImageHandler {
 
@@ -28,5 +30,12 @@ public class ImageHandler {
         Path imageFilePath = Paths.get(uploadDir, filename); // 파일 경로 설정
         Files.copy(file.getInputStream(), imageFilePath, StandardCopyOption.REPLACE_EXISTING); // 실제 파일 저장
         return "/profiles/" + filename; // 클라이언트에서 서버 주소 + 반환값으로 연동
+    }
+
+    public void delete(String imageUrl) throws IOException {
+        if (imageUrl == null || imageUrl.isBlank()) return;
+        String filename = Paths.get(imageUrl).getFileName().toString();
+        Path filePath = Paths.get(uploadDir, filename);
+        Files.deleteIfExists(filePath);
     }
 }

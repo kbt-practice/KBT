@@ -42,7 +42,7 @@ public class PostController {
     }
 
     // 게시글 삭제
-    @PatchMapping(value = "/{postId}")
+    @DeleteMapping(value = "/{postId}")
     public ApiResponse<?> deletePost(
             @RequestHeader("Authorization") String authorization,
             @PathVariable Integer postId

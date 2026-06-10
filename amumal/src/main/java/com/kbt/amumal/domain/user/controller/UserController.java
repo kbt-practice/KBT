@@ -37,7 +37,7 @@ public class UserController {
     }
 
     // 회원 탈퇴
-    @PatchMapping("/withdraw")
+    @DeleteMapping("/withdraw")
     public ApiResponse<?> withdrawUser(@RequestHeader("Authorization") String authorization) {
         int id = userIdToken.getIdByToken(authorization);
         userService.withdrawUser(id);

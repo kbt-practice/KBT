@@ -60,6 +60,7 @@ public class UserReqDTO {
 
     /** 프로필 이미지 수정 요청 */
     @Getter
+    @Setter
     public static class updateProfile {
         private MultipartFile profileImage;
     }

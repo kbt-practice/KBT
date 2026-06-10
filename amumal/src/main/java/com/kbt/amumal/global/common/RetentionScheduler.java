@@ -15,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 
-화/**
+/**
  * 소프트 딜리트된 데이터를 주기적으로 정리하는 스케줄러.
  *
  * 실행 주기: 매일 새벽 3시 (Asia/Seoul)

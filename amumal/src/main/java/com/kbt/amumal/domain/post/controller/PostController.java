@@ -21,7 +21,7 @@ public class PostController {
 
     // 게시글 등록
     @PostMapping(value = "/", consumes = "multipart/form-data")
-    public ApiResponse<?> newPost(@RequestHeader("Authorization") String authorization, @Valid @ModelAttribute PostReqDTO.createPost request) throws IOException {
+    public ApiResponse<?> createPost(@RequestHeader("Authorization") String authorization, @Valid @ModelAttribute PostReqDTO.createPost request) throws IOException {
         int id = userIdToken.getIdByToken(authorization);
         int newPostId = postService.create(id, request);
 

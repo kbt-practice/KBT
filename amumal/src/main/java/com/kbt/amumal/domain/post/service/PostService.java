@@ -15,8 +15,10 @@ import com.kbt.amumal.global.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -30,11 +32,10 @@ public class PostService {
     private final UserRepository userRepository;
     private final ImageHandler fileService;
 
-    public int create(int id, PostReqDTO.createPost request) throws IOException {
-        String postImageUrl = null;
-        if (request.getPostImage() != null && !request.getPostImage().isEmpty()) {
-            postImageUrl = fileService.postSave(request.getPostImage());
-        }
+    public int create(int id, PostReqDTO.createPost request) {
+        String postImageUrl = uploadImageIfPresent(request.getPostImage());
+
+        registerImageRollbackOnFailure(postImageUrl);
 
         Post newPost = postRepository.save(Post.builder()
                 .title(request.getTitle())
@@ -46,7 +47,7 @@ public class PostService {
         return newPost.getPostId();
     }
 
-    public void update(int id, Integer postId, PostReqDTO.updatePost request) throws IOException {
+    public void update(int id, Integer postId, PostReqDTO.updatePost request) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
 
@@ -57,8 +58,24 @@ public class PostService {
             post.updateTitle(request.getTitle());
         if (request.getContent() != null && !request.getContent().isBlank())
             post.updateContent(request.getContent());
-        if (request.getPostImage() != null && !request.getPostImage().isEmpty())
-            post.updatePostImage(fileService.postSave(request.getPostImage()));
+
+        if (request.getPostImage() != null && !request.getPostImage().isEmpty()) {
+            String oldImageUrl = post.getPostImageUrl();
+            String newImageUrl = fileService.postSave(request.getPostImage());
+
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCompletion(int status) {
+                    if (status == TransactionSynchronization.STATUS_COMMITTED) {
+                        fileService.deleteSafely(oldImageUrl);
+                    } else if (status == TransactionSynchronization.STATUS_ROLLED_BACK) {
+                        fileService.deleteSafely(newImageUrl);
+                    }
+                }
+            });
+
+            post.updatePostImage(newImageUrl);
+        }
     }
 
     public void delete(int id, Integer postId) {
@@ -178,5 +195,22 @@ public class PostService {
                 .postId(postId)
                 .type(type)
                 .build();
+    }
+
+    private String uploadImageIfPresent(MultipartFile file) {
+        if (file == null || file.isEmpty()) return null;
+        return fileService.postSave(file);
+    }
+
+    private void registerImageRollbackOnFailure(String imageUrl) {
+        if (imageUrl == null) return;
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCompletion(int status) {
+                if (status == TransactionSynchronization.STATUS_ROLLED_BACK) {
+                    fileService.deleteSafely(imageUrl);
+                }
+            }
+        });
     }
 }

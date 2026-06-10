@@ -9,7 +9,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
 import java.util.Map;
 
 @RestController
@@ -21,7 +20,7 @@ public class PostController {
 
     // 게시글 등록
     @PostMapping(value = "/", consumes = "multipart/form-data")
-    public ApiResponse<?> createPost(@RequestHeader("Authorization") String authorization, @Valid @ModelAttribute PostReqDTO.createPost request) throws IOException {
+    public ApiResponse<?> createPost(@RequestHeader("Authorization") String authorization, @Valid @ModelAttribute PostReqDTO.createPost request) {
         int id = userIdToken.getIdByToken(authorization);
         int newPostId = postService.create(id, request);
 
@@ -34,7 +33,7 @@ public class PostController {
             @RequestHeader("Authorization") String authorization,
             @Valid @ModelAttribute PostReqDTO.updatePost request,
             @PathVariable Integer postId
-    ) throws IOException {
+    ) {
         int id = userIdToken.getIdByToken(authorization);
         postService.update(id, postId, request);
 

@@ -52,7 +52,7 @@ public class RetentionScheduler {
         log.info("만료 게시글 이미지 삭제 시작 - {}개", posts.size());
 
         for (Post post : posts) {
-            deleteImageSafely(post.getPostImageUrl());
+            imageHandler.deleteSafely(post.getPostImageUrl());
             post.clearPostImage(); // postImageUrl을 null로 초기화해 다음 실행 시 중복 삭제 방지
         }
 
@@ -99,7 +99,7 @@ public class RetentionScheduler {
         // 유저 게시글 정리: 댓글·좋아요 먼저 삭제 후 게시글 삭제
         List<Post> userPosts = postRepository.findByUserId(user.getId());
         for (Post post : userPosts) {
-            deleteImageSafely(post.getPostImageUrl());
+            imageHandler.deleteSafely(post.getPostImageUrl());
             commentRepository.deleteByPostId(post.getPostId());
             likeRepository.deleteByPostId(post.getPostId());
         }
@@ -109,23 +109,9 @@ public class RetentionScheduler {
         commentRepository.deleteByUserId(user.getId());
         likeRepository.deleteByUserId(user.getId());
 
-        deleteImageSafely(user.getProfileImageUrl());
+        imageHandler.deleteSafely(user.getProfileImageUrl());
         userRepository.delete(user);
     }
 
-    /**
-     * 이미지 파일 삭제를 시도하고, 실패해도 예외를 전파하지 않는다.
-     *
-     * 파일 하나의 삭제 실패가 전체 배치 작업을 중단시키지 않도록
-     * 예외를 잡아 경고 로그만 남기고 계속 진행한다.
-     *
-     * @param imageUrl 삭제할 이미지 경로 (null이면 ImageHandler 내부에서 무시됨)
-     */
-    private void deleteImageSafely(String imageUrl) {
-        try {
-            imageHandler.delete(imageUrl);
-        } catch (Exception e) {
-            log.warn("이미지 파일 삭제 실패 (DB 삭제는 계속 진행): {}", imageUrl);
-        }
-    }
+
 }

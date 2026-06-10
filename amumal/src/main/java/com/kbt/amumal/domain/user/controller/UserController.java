@@ -9,7 +9,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
 import java.util.Map;
 
 @RestController
@@ -21,7 +20,7 @@ public class UserController {
 
     // 회원 가입
     @PostMapping(value = "/", consumes = "multipart/form-data")
-    public ApiResponse<?> signup(@Valid @ModelAttribute UserReqDTO.Signup request) throws IOException {
+    public ApiResponse<?> signup(@Valid @ModelAttribute UserReqDTO.Signup request) {
         String newUserId = userService.create(request);
 
         return ApiResponse.success("회원가입 성공", Map.of("userId", newUserId));
@@ -65,7 +64,7 @@ public class UserController {
 
     // 프로필 이미지 수정
     @PutMapping("/profileImage")
-    public ApiResponse<?> updateUserProfileImage(@RequestHeader("Authorization") String authorization, @Valid @ModelAttribute UserReqDTO.updateProfile request) throws IOException {
+    public ApiResponse<?> updateUserProfileImage(@RequestHeader("Authorization") String authorization, @Valid @ModelAttribute UserReqDTO.updateProfile request) {
         int id = userIdToken.getIdByToken(authorization);
         userService.updateProfileImage(id, request);
 

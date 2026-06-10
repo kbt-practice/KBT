@@ -47,13 +47,19 @@ public class ImageHandler {
      *
      * @param file 업로드된 MultipartFile
      * @return 저장된 파일의 접근 경로 (예: /profiles/uuid_filename.jpg)
+     * @throws CustomException 디렉토리 미존재, 유효성 검증 실패, IO 오류 시
      */
-    public String profileSave(MultipartFile file) throws IOException {
+    public String profileSave(MultipartFile file) {
         checkUploadDir();
         validateImage(file);
         String filename = UUID.randomUUID() + "_" + file.getOriginalFilename();
         Path imageFilePath = Paths.get(uploadDir, filename);
-        Files.copy(file.getInputStream(), imageFilePath, StandardCopyOption.REPLACE_EXISTING);
+        try {
+            Files.copy(file.getInputStream(), imageFilePath, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            log.error("프로필 이미지 저장 실패: {}", filename, e);
+            throw new CustomException(ErrorCode.IMAGE_UPLOAD_FAILED);
+        }
         return "/profiles/" + filename;
     }
 
@@ -62,27 +68,39 @@ public class ImageHandler {
      *
      * @param file 업로드된 MultipartFile
      * @return 저장된 파일의 접근 경로 (예: /profiles/uuid_filename.jpg)
+     * @throws CustomException 디렉토리 미존재, 유효성 검증 실패, IO 오류 시
      */
-    public String postSave(MultipartFile file) throws IOException {
+    public String postSave(MultipartFile file) {
         checkUploadDir();
         validateImage(file);
         String filename = UUID.randomUUID() + "_" + file.getOriginalFilename();
         Path imageFilePath = Paths.get(uploadDir, filename);
-        Files.copy(file.getInputStream(), imageFilePath, StandardCopyOption.REPLACE_EXISTING);
+        try {
+            Files.copy(file.getInputStream(), imageFilePath, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            log.error("게시글 이미지 저장 실패: {}", filename, e);
+            throw new CustomException(ErrorCode.IMAGE_UPLOAD_FAILED);
+        }
         return "/profiles/" + filename;
     }
 
     /**
      * 이미지 URL에 해당하는 파일을 디스크에서 삭제한다.
      * URL이 null이거나 빈 값이면 아무 작업도 하지 않는다 (멱등성 보장).
+     * 삭제 실패 시 예외를 던지지 않고 경고 로그만 남긴다.
+     * 트랜잭션 콜백 등 실패해도 롤백할 수 없는 컨텍스트에서 사용한다.
      *
      * @param imageUrl 삭제할 이미지의 접근 경로 (예: /profiles/uuid_filename.jpg)
      */
-    public void delete(String imageUrl) throws IOException {
+    public void deleteSafely(String imageUrl) {
         if (imageUrl == null || imageUrl.isBlank()) return;
         String filename = Paths.get(imageUrl).getFileName().toString();
         Path filePath = Paths.get(uploadDir, filename);
-        Files.deleteIfExists(filePath);
+        try {
+            Files.deleteIfExists(filePath);
+        } catch (IOException e) {
+            log.warn("이미지 삭제 실패 (고아 파일 가능성): {}", filePath, e);
+        }
     }
 
     /**
@@ -100,10 +118,15 @@ public class ImageHandler {
      * 확장자 → Content-Type → Magic Bytes 순서로 이미지 유효성을 검증한다.
      * 앞 단계에서 실패하면 이후 단계는 실행되지 않는다.
      */
-    private void validateImage(MultipartFile file) throws IOException {
+    private void validateImage(MultipartFile file) {
         validateExtension(file.getOriginalFilename());
         validateContentType(file.getContentType());
-        validateMagicBytes(file);
+        try {
+            validateMagicBytes(file);
+        } catch (IOException e) {
+            log.error("Magic Bytes 검증 중 IO 오류", e);
+            throw new CustomException(ErrorCode.IMAGE_UPLOAD_FAILED);
+        }
     }
 
     /**
@@ -146,7 +169,6 @@ public class ImageHandler {
             byte[] header = new byte[12];
             int read = is.read(header);
             if (read < 4) {
-                // 헤더를 읽기에 너무 작은 파일은 유효한 이미지가 아님
                 throw new CustomException(ErrorCode.INVALID_IMAGE_MIME_TYPE);
             }
             if (!isJpeg(header) && !isPng(header) && !isGif(header) && !isWebp(header, read)) {

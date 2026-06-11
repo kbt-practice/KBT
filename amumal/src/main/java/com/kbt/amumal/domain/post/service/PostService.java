@@ -95,7 +95,8 @@ public class PostService {
         if (post.getDeletedAt() != null)
             throw new CustomException(ErrorCode.POST_ALREADY_DELETED);
 
-        post.incrementViewCount();
+        postRepository.incrementViewCount(postId); // clearAutomatically = true → L1 캐시 초기화
+        post = postRepository.findById(postId).orElseThrow(); // 증가된 viewCount 반영
 
         User author = userRepository.findById(post.getUserId()).orElse(null);
         long likeCount = likeRepository.countByPostId(post.getPostId());

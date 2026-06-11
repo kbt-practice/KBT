@@ -3,7 +3,7 @@ package com.kbt.amumal.domain.auth.controller;
 import com.kbt.amumal.domain.auth.dto.AuthReqDTO;
 import com.kbt.amumal.domain.auth.service.AuthService;
 import com.kbt.amumal.global.common.ApiResponse;
-import com.kbt.amumal.global.common.UserIdToken;
+import com.kbt.amumal.global.interceptor.LoginUserId;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -15,7 +15,6 @@ import java.util.Map;
 @RequestMapping("/auth")
 public class AuthController {
     private final AuthService authService;
-    private final UserIdToken userIdToken;
 
     @PostMapping("/")
     public ApiResponse<?> login(@Valid @RequestBody AuthReqDTO.LoginReq request) {
@@ -25,10 +24,8 @@ public class AuthController {
     }
 
     @PostMapping("/delete")
-    public ApiResponse<?> logout(@RequestHeader("Authorization") String authorization) {
-        // 토큰 유효성만 검증, 실제 삭제는 프론트에서 처리
-        userIdToken.getIdByToken(authorization);
-
+    public ApiResponse<?> logout(@LoginUserId int userId) {
+        // 토큰 유효성은 인터셉터에서 검증, 실제 삭제는 프론트에서 처리
         return ApiResponse.success("로그아웃 성공", null);
     }
 }

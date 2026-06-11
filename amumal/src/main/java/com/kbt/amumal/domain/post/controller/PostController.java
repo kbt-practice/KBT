@@ -4,7 +4,7 @@ import com.kbt.amumal.domain.post.dto.PostReqDTO;
 import com.kbt.amumal.domain.post.dto.PostResDTO;
 import com.kbt.amumal.domain.post.service.PostService;
 import com.kbt.amumal.global.common.ApiResponse;
-import com.kbt.amumal.global.common.UserIdToken;
+import com.kbt.amumal.global.interceptor.LoginUserId;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -16,13 +16,11 @@ import java.util.Map;
 @RequestMapping("/posts")
 public class PostController {
     private final PostService postService;
-    private final UserIdToken userIdToken;
 
     // 게시글 등록
     @PostMapping(value = "/", consumes = "multipart/form-data")
-    public ApiResponse<?> createPost(@RequestHeader("Authorization") String authorization, @Valid @ModelAttribute PostReqDTO.createPost request) {
-        int id = userIdToken.getIdByToken(authorization);
-        int newPostId = postService.create(id, request);
+    public ApiResponse<?> createPost(@LoginUserId int userId, @Valid @ModelAttribute PostReqDTO.createPost request) {
+        int newPostId = postService.create(userId, request);
 
         return ApiResponse.success("게시글 생성 성공", Map.of("postId", newPostId));
     }
@@ -30,12 +28,11 @@ public class PostController {
     // 게시글 수정
     @PatchMapping(value = "/{postId}", consumes = "multipart/form-data")
     public ApiResponse<?> updatePost(
-            @RequestHeader("Authorization") String authorization,
+            @LoginUserId int userId,
             @Valid @ModelAttribute PostReqDTO.updatePost request,
             @PathVariable Integer postId
     ) {
-        int id = userIdToken.getIdByToken(authorization);
-        postService.update(id, postId, request);
+        postService.update(userId, postId, request);
 
         return ApiResponse.success("게시글 수정 성공", Map.of("postId", postId));
     }
@@ -43,11 +40,10 @@ public class PostController {
     // 게시글 삭제
     @DeleteMapping(value = "/{postId}")
     public ApiResponse<?> deletePost(
-            @RequestHeader("Authorization") String authorization,
+            @LoginUserId int userId,
             @PathVariable Integer postId
     ) {
-        int id = userIdToken.getIdByToken(authorization);
-        postService.delete(id, postId);
+        postService.delete(userId, postId);
 
         return ApiResponse.success("게시글 삭제 성공", Map.of("postId", postId));
     }
@@ -73,11 +69,10 @@ public class PostController {
     // 게시글 좋아요 토글
     @PostMapping("/{postId}/like")
     public ApiResponse<?> toggleLike(
-            @RequestHeader("Authorization") String authorization,
+            @LoginUserId int userId,
             @PathVariable Integer postId
     ) {
-        int id = userIdToken.getIdByToken(authorization);
-        PostResDTO.likeResult statusLike = postService.toggleLike(id, postId);
+        PostResDTO.likeResult statusLike = postService.toggleLike(userId, postId);
         return ApiResponse.success("게시글 좋아요 처리 성공", statusLike);
     }
 }

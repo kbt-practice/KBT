@@ -1,5 +1,6 @@
 package com.kbt.amumal.domain.post.service;
 
+import com.kbt.amumal.domain.comment.entity.Comment;
 import com.kbt.amumal.domain.comment.repository.commentRepository;
 import com.kbt.amumal.domain.post.dto.PostReqDTO;
 import com.kbt.amumal.domain.post.dto.PostResDTO;
@@ -20,6 +21,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -101,11 +103,20 @@ public class PostService {
         User author = userRepository.findById(post.getUserId()).orElse(null);
         long likeCount = likeRepository.countByPostId(post.getPostId());
 
-        List<PostResDTO.commentItem> commentItems = commentRepository
-                .findByPostIdAndDeletedAtIsNullOrderByCreatedAtAsc(post.getPostId())
-                .stream()
+        List<Comment> comments = commentRepository
+                .findByPostIdAndDeletedAtIsNullOrderByCreatedAtAsc(post.getPostId());
+
+        // 댓글 작성자 ID 목록으로 한 번에 조회 (N+1 방지)
+        List<Integer> commenterIds = comments.stream()
+                .map(Comment::getUserId)
+                .distinct()
+                .collect(Collectors.toList());
+        Map<Integer, User> commenterMap = userRepository.findAllById(commenterIds).stream()
+                .collect(Collectors.toMap(User::getId, u -> u));
+
+        List<PostResDTO.commentItem> commentItems = comments.stream()
                 .map(comment -> {
-                    User commenter = userRepository.findById(comment.getUserId()).orElse(null);
+                    User commenter = commenterMap.get(comment.getUserId());
                     return PostResDTO.commentItem.builder()
                             .commentId(comment.getCommentId())
                             .comment(comment.getContent())
@@ -143,8 +154,16 @@ public class PostService {
 
         Integer nextCursor = hasNext ? posts.get(posts.size() - 1).getPostId() : null;
 
+        // 게시글 작성자 ID 목록으로 한 번에 조회 (N+1 방지)
+        List<Integer> authorIds = posts.stream()
+                .map(Post::getUserId)
+                .distinct()
+                .collect(Collectors.toList());
+        Map<Integer, User> authorMap = userRepository.findAllById(authorIds).stream()
+                .collect(Collectors.toMap(User::getId, u -> u));
+
         List<PostResDTO.postListItem> items = posts.stream().map(post -> {
-            User user = userRepository.findById(post.getUserId()).orElse(null);
+            User user = authorMap.get(post.getUserId());
             long likeCount = likeRepository.countByPostId(post.getPostId());
             long commentCount = commentRepository.countByPostIdAndDeletedAtIsNull(post.getPostId());
 

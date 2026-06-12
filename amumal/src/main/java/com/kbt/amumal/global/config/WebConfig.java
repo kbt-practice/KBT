@@ -20,6 +20,12 @@ public class WebConfig implements WebMvcConfigurer {
     @Value("${file.upload-dir}")
     private String uploadDir;
 
+    @Value("${file.profile-access-path}")
+    private String profileAccessPath;
+
+    @Value("${file.posts-access-path}")
+    private String postsAccessPath;
+
     private final AuthInterceptor authInterceptor;
     private final LoginUserArgumentResolver loginUserArgumentResolver;
 
@@ -37,11 +43,14 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedHeaders("Content-Type", "Authorization");
     }
 
-    // 정적 리소스 경로 매핑: /profiles/** 요청을 실제 업로드 디렉토리로 연결
+    // 정적 리소스 경로 매핑: env의 접근 경로 요청을 실제 업로드 디렉토리로 연결
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("/profiles/**")
-                .addResourceLocations("file:" + System.getProperty("user.dir") + "/" + uploadDir + "/");
+        String location = "file:" + uploadDir + (uploadDir.endsWith("/") ? "" : "/");
+        registry.addResourceHandler(profileAccessPath + "/**").addResourceLocations(location);
+        if (!postsAccessPath.equals(profileAccessPath)) {
+            registry.addResourceHandler(postsAccessPath + "/**").addResourceLocations(location);
+        }
     }
 
     // 인터셉터 - 모든 요청에 AuthInterceptor 적용 (@LoginUserId 없는 경로는 적용 안됨)

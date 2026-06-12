@@ -38,9 +38,14 @@ public class ImageHandler {
             "image/jpg", "image/jpeg", "image/png", "image/gif", "image/webp"
     );
 
-    /** application.properties 의 file.upload-dir 경로 */
     @Value("${file.upload-dir}")
     private String uploadDir;
+
+    @Value("${file.profile-access-path}")
+    private String profileAccessPath;
+
+    @Value("${file.posts-access-path}")
+    private String postsAccessPath;
 
     /**
      * 프로필 이미지를 저장하고 접근 URL을 반환한다.
@@ -60,7 +65,7 @@ public class ImageHandler {
             log.error("프로필 이미지 저장 실패: {}", filename, e);
             throw new CustomException(ErrorCode.IMAGE_UPLOAD_FAILED);
         }
-        return "/profiles/" + filename;
+        return profileAccessPath + "/" + filename;
     }
 
     /**
@@ -81,12 +86,12 @@ public class ImageHandler {
             log.error("게시글 이미지 저장 실패: {}", filename, e);
             throw new CustomException(ErrorCode.IMAGE_UPLOAD_FAILED);
         }
-        return "/profiles/" + filename;
+        return postsAccessPath + "/" + filename;
     }
 
     /**
      * 이미지 URL에 해당하는 파일을 디스크에서 삭제한다.
-     * URL이 null이거나 빈 값이면 아무 작업도 하지 않는다 (멱등성 보장).
+     * URL이 null이거나 빈 값이면 아무 작업도 하지 않는다.
      * 삭제 실패 시 예외를 던지지 않고 경고 로그만 남긴다.
      * 트랜잭션 콜백 등 실패해도 롤백할 수 없는 컨텍스트에서 사용한다.
      *

@@ -33,7 +33,7 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
                         post.deletedAt.isNull(),
                         beforeCursor(cursor)
                 )
-                .orderBy(post.createdAt.desc())
+                .orderBy(post.postId.desc())
                 .limit(size)
                 .fetch();
     }

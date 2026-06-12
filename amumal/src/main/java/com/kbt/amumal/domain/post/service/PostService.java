@@ -130,6 +130,7 @@ public class PostService {
                 post.getPostId(),
                 post.getTitle(),
                 post.getContent(),
+                post.getPostImageUrl(),
                 likeCount,
                 post.getViewCount(),
                 author != null ? new PostResDTO.userInfo(author.getUserId(), author.getNickname(), author.getProfileImageUrl()) : null,
@@ -162,6 +163,7 @@ public class PostService {
             return new PostResDTO.postListItem(
                     post.getPostId(),
                     post.getTitle(),
+                    post.getPostImageUrl(),
                     likeCount,
                     commentCount,
                     post.getViewCount(),

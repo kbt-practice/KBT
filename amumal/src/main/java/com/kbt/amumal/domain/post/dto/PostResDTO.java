@@ -10,6 +10,7 @@ public class PostResDTO {
     public record postListItem(
             Integer postId,
             String title,
+            String postImage,
             long like,
             long comment,
             int view,
@@ -32,6 +33,7 @@ public class PostResDTO {
             Integer postId,
             String title,
             String content,
+            String postImage,
             long like,
             int view,
             userInfo user,

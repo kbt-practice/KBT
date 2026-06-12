@@ -23,13 +23,13 @@ public class UserService {
     private final ImageHandler fileService;
     private final PasswordEncoder passwordEncoder;
 
-    public String create(UserReqDTO.Signup request) {
+    public String create(UserReqDTO.Signup request, MultipartFile profileImage) {
         if (userRepository.findByEmail(request.email()).isPresent())
             throw new CustomException(ErrorCode.DUPLICATE_EMAIL);
         if (userRepository.findByNickname(request.nickname()).isPresent())
             throw new CustomException(ErrorCode.DUPLICATE_NICKNAME);
 
-        String profileImageUrl = uploadImageIfPresent(request.profileImage());
+        String profileImageUrl = uploadImageIfPresent(profileImage);
 
         // 이미지 업로드 성공 후 DB 저장에 실패하면 트랜잭션 롤백 콜백에서 파일 정리
         registerImageRollbackOnFailure(profileImageUrl);
@@ -78,12 +78,12 @@ public class UserService {
         user.updatePassword(passwordEncoder.encode(request.password()));
     }
 
-    public void updateProfileImage(int id, UserReqDTO.updateProfile request) {
+    public void updateProfileImage(int id, MultipartFile profileImage) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         String oldImageUrl = user.getProfileImageUrl();
-        String newImageUrl = fileService.profileSave(request.profileImage());
+        String newImageUrl = fileService.profileSave(profileImage);
 
         // 커밋 성공 시 기존 이미지 삭제, 롤백 시 새로 업로드한 이미지 삭제
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {

@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
 
@@ -24,8 +25,12 @@ public class PostController {
 
     @Operation(summary = "게시글 등록", description = "제목·내용·이미지(선택)로 게시글을 생성합니다.")
     @PostMapping(value = "/", consumes = "multipart/form-data")
-    public ApiResponse<?> createPost(@LoginUserId int userId, @Valid @ModelAttribute PostReqDTO.createPost request) {
-        int newPostId = postService.create(userId, request);
+    public ApiResponse<?> createPost(
+            @LoginUserId int userId,
+            @Valid @ModelAttribute PostReqDTO.createPost request,
+            @RequestParam(required = false) MultipartFile postImage
+    ) {
+        int newPostId = postService.create(userId, request, postImage);
 
         return ApiResponse.success("게시글 생성 성공", Map.of("postId", newPostId));
     }
@@ -35,9 +40,10 @@ public class PostController {
     public ApiResponse<?> updatePost(
             @LoginUserId int userId,
             @Valid @ModelAttribute PostReqDTO.updatePost request,
-            @Parameter(description = "수정할 게시글 ID") @PathVariable Integer postId
+            @Parameter(description = "수정할 게시글 ID") @PathVariable Integer postId,
+            @RequestParam(required = false) MultipartFile postImage
     ) {
-        postService.update(userId, postId, request);
+        postService.update(userId, postId, request, postImage);
 
         return ApiResponse.success("게시글 수정 성공", Map.of("postId", postId));
     }

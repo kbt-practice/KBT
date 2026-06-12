@@ -36,8 +36,8 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedOrigins(
                         "https://www.amon.p-e.kr",
                         "https://api.amon.p-e.kr",
-                        "http://127.0.0.1:3000",
-                        "http://127.0.0.1:8080"
+                        "http://localhost:3000",
+                        "http://localhost:8080"
                 )
                 .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                 .allowedHeaders("Content-Type", "Authorization");

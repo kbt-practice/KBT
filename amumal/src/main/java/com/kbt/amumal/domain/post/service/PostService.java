@@ -34,8 +34,8 @@ public class PostService {
     private final UserRepository userRepository;
     private final ImageHandler fileService;
 
-    public int create(int id, PostReqDTO.createPost request) {
-        String postImageUrl = uploadImageIfPresent(request.postImage());
+    public int create(int id, PostReqDTO.createPost request, MultipartFile postImage) {
+        String postImageUrl = uploadImageIfPresent(postImage);
 
         registerImageRollbackOnFailure(postImageUrl);
 
@@ -49,7 +49,7 @@ public class PostService {
         return newPost.getPostId();
     }
 
-    public void update(int id, Integer postId, PostReqDTO.updatePost request) {
+    public void update(int id, Integer postId, PostReqDTO.updatePost request, MultipartFile postImage) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
 
@@ -61,9 +61,9 @@ public class PostService {
         if (request.content() != null && !request.content().isBlank())
             post.updateContent(request.content());
 
-        if (request.postImage() != null && !request.postImage().isEmpty()) {
+        if (postImage != null && !postImage.isEmpty()) {
             String oldImageUrl = post.getPostImageUrl();
-            String newImageUrl = fileService.postSave(request.postImage());
+            String newImageUrl = fileService.postSave(postImage);
 
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override

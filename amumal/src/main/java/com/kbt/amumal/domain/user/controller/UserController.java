@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
 
@@ -24,8 +25,11 @@ public class UserController {
     @Operation(summary = "회원가입", description = "이메일·비밀번호·닉네임으로 가입합니다. 프로필 이미지는 선택입니다.")
     @SecurityRequirements
     @PostMapping(value = "/", consumes = "multipart/form-data")
-    public ApiResponse<?> signup(@Valid @ModelAttribute UserReqDTO.Signup request) {
-        String newUserId = userService.create(request);
+    public ApiResponse<?> signup(
+            @Valid @ModelAttribute UserReqDTO.Signup request,
+            @RequestParam(required = false) MultipartFile profileImage
+    ) {
+        String newUserId = userService.create(request, profileImage);
 
         return ApiResponse.success("회원가입 성공", Map.of("userId", newUserId));
     }
@@ -64,8 +68,11 @@ public class UserController {
 
     @Operation(summary = "프로필 이미지 수정")
     @PutMapping(value = "/profileImage", consumes = "multipart/form-data")
-    public ApiResponse<?> updateUserProfileImage(@LoginUserId int userId, @Valid @ModelAttribute UserReqDTO.updateProfile request) {
-        userService.updateProfileImage(userId, request);
+    public ApiResponse<?> updateUserProfileImage(
+            @LoginUserId int userId,
+            @RequestParam MultipartFile profileImage
+    ) {
+        userService.updateProfileImage(userId, profileImage);
 
         return ApiResponse.success("유저 프로필 이미지 수정 성공", null);
     }

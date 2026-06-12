@@ -2,7 +2,6 @@ package com.kbt.amumal.domain.user.dto;
 
 import com.kbt.amumal.global.common.ValidationMessage;
 import jakarta.validation.constraints.*;
-import org.springframework.web.multipart.MultipartFile;
 
 public class UserReqDTO {
 
@@ -21,9 +20,7 @@ public class UserReqDTO {
             @NotBlank(message = ValidationMessage.REQUIRED_NICKNAME)
             @Size(max = 10, message = ValidationMessage.NICKNAME_MAX_LENGTH)
             @Pattern(regexp = "^\\S+$", message = ValidationMessage.NICKNAME_NO_SPACE)
-            String nickname,
-
-            MultipartFile profileImage
+            String nickname
     ) {}
 
     public record UpdateNickname(
@@ -40,6 +37,4 @@ public class UserReqDTO {
             )
             String password
     ) {}
-
-    public record updateProfile(MultipartFile profileImage) {}
 }

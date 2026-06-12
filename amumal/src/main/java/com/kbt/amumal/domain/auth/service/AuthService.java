@@ -18,10 +18,10 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
 
     public String userLogin(AuthReqDTO.LoginReq request) {
-        User loginUser = userRepository.findByEmail(request.getEmail())
+        User loginUser = userRepository.findByEmail(request.email())
                 .orElseThrow(() -> new CustomException(ErrorCode.LOGIN_FAILED));
 
-        if (!passwordEncoder.matches(request.getPassword(), loginUser.getPassword())) {
+        if (!passwordEncoder.matches(request.password(), loginUser.getPassword())) {
             throw new CustomException(ErrorCode.LOGIN_FAILED);
         }
 

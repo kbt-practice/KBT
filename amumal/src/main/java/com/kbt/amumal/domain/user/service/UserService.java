@@ -24,20 +24,20 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     public String create(UserReqDTO.Signup request) {
-        if (userRepository.findByEmail(request.getEmail()).isPresent())
+        if (userRepository.findByEmail(request.email()).isPresent())
             throw new CustomException(ErrorCode.DUPLICATE_EMAIL);
-        if (userRepository.findByNickname(request.getNickname()).isPresent())
+        if (userRepository.findByNickname(request.nickname()).isPresent())
             throw new CustomException(ErrorCode.DUPLICATE_NICKNAME);
 
-        String profileImageUrl = uploadImageIfPresent(request.getProfileImage());
+        String profileImageUrl = uploadImageIfPresent(request.profileImage());
 
         // 이미지 업로드 성공 후 DB 저장에 실패하면 트랜잭션 롤백 콜백에서 파일 정리
         registerImageRollbackOnFailure(profileImageUrl);
 
         User newUser = userRepository.save(User.builder()
-                .email(request.getEmail())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .nickname(request.getNickname())
+                .email(request.email())
+                .password(passwordEncoder.encode(request.password()))
+                .nickname(request.nickname())
                 .profileImageUrl(profileImageUrl)
                 .build());
 
@@ -65,17 +65,17 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-        if (userRepository.findByNickname(request.getNickname()).isPresent())
+        if (userRepository.findByNickname(request.nickname()).isPresent())
             throw new CustomException(ErrorCode.DUPLICATE_NICKNAME);
 
-        user.updateNickname(request.getNickname());
+        user.updateNickname(request.nickname());
     }
 
     public void updatePassword(int id, UserReqDTO.UpdatePassword request) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-        user.updatePassword(passwordEncoder.encode(request.getPassword()));
+        user.updatePassword(passwordEncoder.encode(request.password()));
     }
 
     public void updateProfileImage(int id, UserReqDTO.updateProfile request) {
@@ -83,7 +83,7 @@ public class UserService {
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         String oldImageUrl = user.getProfileImageUrl();
-        String newImageUrl = fileService.profileSave(request.getProfileImage());
+        String newImageUrl = fileService.profileSave(request.profileImage());
 
         // 커밋 성공 시 기존 이미지 삭제, 롤백 시 새로 업로드한 이미지 삭제
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {

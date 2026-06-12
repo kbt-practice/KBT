@@ -35,13 +35,13 @@ public class PostService {
     private final ImageHandler fileService;
 
     public int create(int id, PostReqDTO.createPost request) {
-        String postImageUrl = uploadImageIfPresent(request.getPostImage());
+        String postImageUrl = uploadImageIfPresent(request.postImage());
 
         registerImageRollbackOnFailure(postImageUrl);
 
         Post newPost = postRepository.save(Post.builder()
-                .title(request.getTitle())
-                .content(request.getContent())
+                .title(request.title())
+                .content(request.content())
                 .postImageUrl(postImageUrl)
                 .userId(id)
                 .build());
@@ -56,14 +56,14 @@ public class PostService {
         if (post.getUserId() != id)
             throw new CustomException(ErrorCode.POST_FORBIDDEN_UPDATE);
 
-        if (request.getTitle() != null && !request.getTitle().isBlank())
-            post.updateTitle(request.getTitle());
-        if (request.getContent() != null && !request.getContent().isBlank())
-            post.updateContent(request.getContent());
+        if (request.title() != null && !request.title().isBlank())
+            post.updateTitle(request.title());
+        if (request.content() != null && !request.content().isBlank())
+            post.updateContent(request.content());
 
-        if (request.getPostImage() != null && !request.getPostImage().isEmpty()) {
+        if (request.postImage() != null && !request.postImage().isEmpty()) {
             String oldImageUrl = post.getPostImageUrl();
-            String newImageUrl = fileService.postSave(request.getPostImage());
+            String newImageUrl = fileService.postSave(request.postImage());
 
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override
@@ -117,33 +117,25 @@ public class PostService {
         List<PostResDTO.commentItem> commentItems = comments.stream()
                 .map(comment -> {
                     User commenter = commenterMap.get(comment.getUserId());
-                    return PostResDTO.commentItem.builder()
-                            .commentId(comment.getCommentId())
-                            .comment(comment.getContent())
-                            .user(commenter != null ? PostResDTO.userInfo.builder()
-                                    .userId(commenter.getUserId())
-                                    .nickname(commenter.getNickname())
-                                    .profileImage(commenter.getProfileImageUrl())
-                                    .build() : null)
-                            .createdAt(comment.getCreatedAt())
-                            .build();
+                    return new PostResDTO.commentItem(
+                            comment.getCommentId(),
+                            comment.getContent(),
+                            commenter != null ? new PostResDTO.userInfo(commenter.getUserId(), commenter.getNickname(), commenter.getProfileImageUrl()) : null,
+                            comment.getCreatedAt()
+                    );
                 })
                 .collect(Collectors.toList());
 
-        return PostResDTO.postDetailResponse.builder()
-                .postId(post.getPostId())
-                .title(post.getTitle())
-                .content(post.getContent())
-                .like(likeCount)
-                .view(post.getViewCount())
-                .user(author != null ? PostResDTO.userInfo.builder()
-                        .userId(author.getUserId())
-                        .nickname(author.getNickname())
-                        .profileImage(author.getProfileImageUrl())
-                        .build() : null)
-                .createdAt(post.getCreatedAt())
-                .comments(commentItems)
-                .build();
+        return new PostResDTO.postDetailResponse(
+                post.getPostId(),
+                post.getTitle(),
+                post.getContent(),
+                likeCount,
+                post.getViewCount(),
+                author != null ? new PostResDTO.userInfo(author.getUserId(), author.getNickname(), author.getProfileImageUrl()) : null,
+                post.getCreatedAt(),
+                commentItems
+        );
     }
 
     public PostResDTO.postListResponse getList(Integer cursor, int size) {
@@ -167,28 +159,18 @@ public class PostService {
             long likeCount = likeRepository.countByPostId(post.getPostId());
             long commentCount = commentRepository.countByPostIdAndDeletedAtIsNull(post.getPostId());
 
-            return PostResDTO.postListItem.builder()
-                    .postId(post.getPostId())
-                    .title(post.getTitle())
-                    .like(likeCount)
-                    .comment(commentCount)
-                    .view(post.getViewCount())
-                    .user(user != null ? PostResDTO.userInfo.builder()
-                            .userId(user.getUserId())
-                            .nickname(user.getNickname())
-                            .profileImage(user.getProfileImageUrl())
-                            .build() : null)
-                    .createdAt(post.getCreatedAt())
-                    .build();
+            return new PostResDTO.postListItem(
+                    post.getPostId(),
+                    post.getTitle(),
+                    likeCount,
+                    commentCount,
+                    post.getViewCount(),
+                    user != null ? new PostResDTO.userInfo(user.getUserId(), user.getNickname(), user.getProfileImageUrl()) : null,
+                    post.getCreatedAt()
+            );
         }).collect(Collectors.toList());
 
-        return PostResDTO.postListResponse.builder()
-                .posts(items)
-                .pagination(PostResDTO.pagination.builder()
-                        .nextCursor(nextCursor)
-                        .hasNext(hasNext)
-                        .build())
-                .build();
+        return new PostResDTO.postListResponse(items, new PostResDTO.pagination(nextCursor, hasNext));
     }
 
     public PostResDTO.likeResult toggleLike(int id, Integer postId) {
@@ -210,11 +192,7 @@ public class PostService {
             type = "CREATE";
         }
 
-        return PostResDTO.likeResult.builder()
-                .userId(user.getUserId())
-                .postId(postId)
-                .type(type)
-                .build();
+        return new PostResDTO.likeResult(user.getUserId(), postId, type);
     }
 
     private String uploadImageIfPresent(MultipartFile file) {

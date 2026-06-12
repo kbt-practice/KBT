@@ -1,80 +1,43 @@
 package com.kbt.amumal.domain.post.dto;
 
-import lombok.Builder;
-import lombok.Getter;
-
 import java.time.LocalDateTime;
 import java.util.List;
 
 public class PostResDTO {
-    // 유저 정보
-    @Getter
-    @Builder
-    public static class userInfo {
-        private String userId;
-        private String nickname;
-        private String profileImage;
-    }
 
-    // 게시글 리스트 중 하나
-    @Getter
-    @Builder
-    public static class postListItem {
-        private Integer postId;
-        private String title;
-        private long like;
-        private long comment;
-        private int view;
-        private userInfo user;
-        private LocalDateTime createdAt;
-    }
+    public record userInfo(String userId, String nickname, String profileImage) {}
 
-    // 페이지네이션
-    @Getter
-    @Builder
-    public static class pagination {
-        private Integer nextCursor;
-        private boolean hasNext;
-    }
+    public record postListItem(
+            Integer postId,
+            String title,
+            long like,
+            long comment,
+            int view,
+            userInfo user,
+            LocalDateTime createdAt
+    ) {}
 
-    // 게시글 목록 조회 응답 DTO - 최종 (유저 정보 + 게시글 + 페이지네이션)
-    @Getter
-    @Builder
-    public static class postListResponse {
-        private List<postListItem> posts;
-        private pagination pagination;
-    }
+    public record pagination(Integer nextCursor, boolean hasNext) {}
 
-    // 댓글 조회 응답 DTO
-    @Getter
-    @Builder
-    public static class commentItem {
-        private Integer commentId;
-        private String comment;
-        private userInfo user;
-        private LocalDateTime createdAt;
-    }
+    public record postListResponse(List<postListItem> posts, pagination pagination) {}
 
-    // 게시글 상세 조회 응답 DTO
-    @Getter
-    @Builder
-    public static class postDetailResponse {
-        private Integer postId;
-        private String title;
-        private String content;
-        private long like;
-        private int view;
-        private userInfo user;
-        private LocalDateTime createdAt;
-        private List<commentItem> comments;
-    }
+    public record commentItem(
+            Integer commentId,
+            String comment,
+            userInfo user,
+            LocalDateTime createdAt
+    ) {}
 
-    // 좋아요 결과 응답 DTO
-    @Getter
-    @Builder
-    public static class likeResult {
-        private String userId;
-        private Integer postId;
-        private String type; // CREATE, DELETE
-    }
+    public record postDetailResponse(
+            Integer postId,
+            String title,
+            String content,
+            long like,
+            int view,
+            userInfo user,
+            LocalDateTime createdAt,
+            List<commentItem> comments
+    ) {}
+
+    public record likeResult(String userId, Integer postId, String type) {}
 }

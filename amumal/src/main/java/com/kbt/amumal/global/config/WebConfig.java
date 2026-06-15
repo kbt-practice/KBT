@@ -48,7 +48,10 @@ public class WebConfig implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         String location = "file:" + uploadDir + (uploadDir.endsWith("/") ? "" : "/");
         registry.addResourceHandler(profileAccessPath + "/**").addResourceLocations(location);
-        if (!postsAccessPath.equals(profileAccessPath)) {
+        // /post-images/** 는 API 컨트롤러(/posts/**)와 충돌하지 않는 전용 정적 이미지 경로
+        registry.addResourceHandler("/post-images/**").addResourceLocations(location);
+        if (!postsAccessPath.equals(profileAccessPath) && !postsAccessPath.equals("/post-images")) {
+            // 기존 /posts/** 경로로 저장된 이미지도 계속 서빙 (하위 호환)
             registry.addResourceHandler(postsAccessPath + "/**").addResourceLocations(location);
         }
     }

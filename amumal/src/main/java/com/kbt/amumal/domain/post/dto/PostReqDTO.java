@@ -1,28 +1,17 @@
 package com.kbt.amumal.domain.post.dto;
 
+import com.kbt.amumal.global.common.ValidationMessage;
 import jakarta.validation.constraints.NotBlank;
-import lombok.Getter;
-import lombok.Setter;
-import org.springframework.web.multipart.MultipartFile;
 
 public class PostReqDTO {
-    @Getter
-    @Setter
-    public static class createPost {
-        @NotBlank(message = "제목을 입력해주세요.")
-        private String title;
 
-        @NotBlank(message = "내용을 입력해주세요.")
-        private String content;
+    public record createPost(
+            @NotBlank(message = ValidationMessage.REQUIRED_POST_TITLE)
+            String title,
 
-        private MultipartFile postImage;
-    }
+            @NotBlank(message = ValidationMessage.REQUIRED_POST_CONTENT)
+            String content
+    ) {}
 
-    @Getter
-    @Setter
-    public static class updatePost {
-        private String title;
-        private String content;
-        private MultipartFile postImage;
-    }
+    public record updatePost(String title, String content) {}
 }

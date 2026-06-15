@@ -42,7 +42,13 @@ public enum ErrorCode {
     // 댓글
     COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "데이터가 존재하지 않습니다.", "댓글 정보를 확인해주세요."),
     COMMENT_ALREADY_DELETED(HttpStatus.NOT_FOUND, "데이터가 존재하지 않습니다.", "이미 삭제된 댓글입니다."),
-    COMMENT_FORBIDDEN(HttpStatus.FORBIDDEN, "권한이 부족합니다.", "본인 댓글만 수정/삭제할 수 있습니다.");
+    COMMENT_FORBIDDEN(HttpStatus.FORBIDDEN, "권한이 부족합니다.", "본인 댓글만 수정/삭제할 수 있습니다."),
+
+    // 이미지
+    INVALID_IMAGE_EXTENSION(HttpStatus.BAD_REQUEST, "유효하지 않은 요청입니다.", "허용되지 않는 이미지 확장자입니다. (jpg, jpeg, png, gif, webp)"),
+    INVALID_IMAGE_MIME_TYPE(HttpStatus.BAD_REQUEST, "유효하지 않은 요청입니다.", "유효하지 않은 이미지 파일입니다."),
+    UPLOAD_DIR_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR, "서버 에러", "업로드 디렉토리를 찾을 수 없습니다."),
+    IMAGE_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "서버 에러", "이미지 업로드에 실패했습니다.");
 
     private final HttpStatus status;
     private final String message;

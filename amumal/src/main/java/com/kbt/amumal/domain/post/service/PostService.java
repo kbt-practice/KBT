@@ -1,5 +1,6 @@
 package com.kbt.amumal.domain.post.service;
 
+import com.kbt.amumal.domain.comment.entity.Comment;
 import com.kbt.amumal.domain.comment.repository.commentRepository;
 import com.kbt.amumal.domain.post.dto.PostReqDTO;
 import com.kbt.amumal.domain.post.dto.PostResDTO;
@@ -15,9 +16,12 @@ import com.kbt.amumal.global.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -30,15 +34,14 @@ public class PostService {
     private final UserRepository userRepository;
     private final ImageHandler fileService;
 
-    public int create(int id, PostReqDTO.createPost request) throws IOException {
-        String postImageUrl = null;
-        if (request.getPostImage() != null && !request.getPostImage().isEmpty()) {
-            postImageUrl = fileService.postSave(request.getPostImage());
-        }
+    public int create(int id, PostReqDTO.createPost request, MultipartFile postImage) {
+        String postImageUrl = uploadImageIfPresent(postImage);
+
+        registerImageRollbackOnFailure(postImageUrl);
 
         Post newPost = postRepository.save(Post.builder()
-                .title(request.getTitle())
-                .content(request.getContent())
+                .title(request.title())
+                .content(request.content())
                 .postImageUrl(postImageUrl)
                 .userId(id)
                 .build());
@@ -46,19 +49,35 @@ public class PostService {
         return newPost.getPostId();
     }
 
-    public void update(int id, Integer postId, PostReqDTO.updatePost request) throws IOException {
+    public void update(int id, Integer postId, PostReqDTO.updatePost request, MultipartFile postImage) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
 
         if (post.getUserId() != id)
             throw new CustomException(ErrorCode.POST_FORBIDDEN_UPDATE);
 
-        if (request.getTitle() != null && !request.getTitle().isBlank())
-            post.updateTitle(request.getTitle());
-        if (request.getContent() != null && !request.getContent().isBlank())
-            post.updateContent(request.getContent());
-        if (request.getPostImage() != null && !request.getPostImage().isEmpty())
-            post.updatePostImage(fileService.postSave(request.getPostImage()));
+        if (request.title() != null && !request.title().isBlank())
+            post.updateTitle(request.title());
+        if (request.content() != null && !request.content().isBlank())
+            post.updateContent(request.content());
+
+        if (postImage != null && !postImage.isEmpty()) {
+            String oldImageUrl = post.getPostImageUrl();
+            String newImageUrl = fileService.postSave(postImage);
+
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCompletion(int status) {
+                    if (status == TransactionSynchronization.STATUS_COMMITTED) {
+                        fileService.deleteSafely(oldImageUrl);
+                    } else if (status == TransactionSynchronization.STATUS_ROLLED_BACK) {
+                        fileService.deleteSafely(newImageUrl);
+                    }
+                }
+            });
+
+            post.updatePostImage(newImageUrl);
+        }
     }
 
     public void delete(int id, Integer postId) {
@@ -78,43 +97,46 @@ public class PostService {
         if (post.getDeletedAt() != null)
             throw new CustomException(ErrorCode.POST_ALREADY_DELETED);
 
-        post.incrementViewCount();
+        postRepository.incrementViewCount(postId); // clearAutomatically = true → L1 캐시 초기화
+        post = postRepository.findById(postId).orElseThrow(); // 증가된 viewCount 반영
 
         User author = userRepository.findById(post.getUserId()).orElse(null);
         long likeCount = likeRepository.countByPostId(post.getPostId());
 
-        List<PostResDTO.commentItem> commentItems = commentRepository
-                .findByPostIdAndDeletedAtIsNullOrderByCreatedAtAsc(post.getPostId())
-                .stream()
+        List<Comment> comments = commentRepository
+                .findByPostIdAndDeletedAtIsNullOrderByCreatedAtAsc(post.getPostId());
+
+        // 댓글 작성자 ID 목록으로 한 번에 조회 (N+1 방지)
+        List<Integer> commenterIds = comments.stream()
+                .map(Comment::getUserId)
+                .distinct()
+                .collect(Collectors.toList());
+        Map<Integer, User> commenterMap = userRepository.findAllById(commenterIds).stream()
+                .collect(Collectors.toMap(User::getId, u -> u));
+
+        List<PostResDTO.commentItem> commentItems = comments.stream()
                 .map(comment -> {
-                    User commenter = userRepository.findById(comment.getUserId()).orElse(null);
-                    return PostResDTO.commentItem.builder()
-                            .commentId(comment.getCommentId())
-                            .comment(comment.getContent())
-                            .user(commenter != null ? PostResDTO.userInfo.builder()
-                                    .userId(commenter.getUserId())
-                                    .nickname(commenter.getNickname())
-                                    .profileImage(commenter.getProfileImageUrl())
-                                    .build() : null)
-                            .createdAt(comment.getCreatedAt())
-                            .build();
+                    User commenter = commenterMap.get(comment.getUserId());
+                    return new PostResDTO.commentItem(
+                            comment.getCommentId(),
+                            comment.getContent(),
+                            commenter != null ? new PostResDTO.userInfo(commenter.getUserId(), commenter.getNickname(), commenter.getProfileImageUrl()) : null,
+                            comment.getCreatedAt()
+                    );
                 })
                 .collect(Collectors.toList());
 
-        return PostResDTO.postDetailResponse.builder()
-                .postId(post.getPostId())
-                .title(post.getTitle())
-                .content(post.getContent())
-                .like(likeCount)
-                .view(post.getViewCount())
-                .user(author != null ? PostResDTO.userInfo.builder()
-                        .userId(author.getUserId())
-                        .nickname(author.getNickname())
-                        .profileImage(author.getProfileImageUrl())
-                        .build() : null)
-                .createdAt(post.getCreatedAt())
-                .comments(commentItems)
-                .build();
+        return new PostResDTO.postDetailResponse(
+                post.getPostId(),
+                post.getTitle(),
+                post.getContent(),
+                post.getPostImageUrl(),
+                likeCount,
+                post.getViewCount(),
+                author != null ? new PostResDTO.userInfo(author.getUserId(), author.getNickname(), author.getProfileImageUrl()) : null,
+                post.getCreatedAt(),
+                commentItems
+        );
     }
 
     public PostResDTO.postListResponse getList(Integer cursor, int size) {
@@ -125,33 +147,32 @@ public class PostService {
 
         Integer nextCursor = hasNext ? posts.get(posts.size() - 1).getPostId() : null;
 
+        // 게시글 작성자 ID 목록으로 한 번에 조회 (N+1 방지)
+        List<Integer> authorIds = posts.stream()
+                .map(Post::getUserId)
+                .distinct()
+                .collect(Collectors.toList());
+        Map<Integer, User> authorMap = userRepository.findAllById(authorIds).stream()
+                .collect(Collectors.toMap(User::getId, u -> u));
+
         List<PostResDTO.postListItem> items = posts.stream().map(post -> {
-            User user = userRepository.findById(post.getUserId()).orElse(null);
+            User user = authorMap.get(post.getUserId());
             long likeCount = likeRepository.countByPostId(post.getPostId());
             long commentCount = commentRepository.countByPostIdAndDeletedAtIsNull(post.getPostId());
 
-            return PostResDTO.postListItem.builder()
-                    .postId(post.getPostId())
-                    .title(post.getTitle())
-                    .like(likeCount)
-                    .comment(commentCount)
-                    .view(post.getViewCount())
-                    .user(user != null ? PostResDTO.userInfo.builder()
-                            .userId(user.getUserId())
-                            .nickname(user.getNickname())
-                            .profileImage(user.getProfileImageUrl())
-                            .build() : null)
-                    .createdAt(post.getCreatedAt())
-                    .build();
+            return new PostResDTO.postListItem(
+                    post.getPostId(),
+                    post.getTitle(),
+                    post.getPostImageUrl(),
+                    likeCount,
+                    commentCount,
+                    post.getViewCount(),
+                    user != null ? new PostResDTO.userInfo(user.getUserId(), user.getNickname(), user.getProfileImageUrl()) : null,
+                    post.getCreatedAt()
+            );
         }).collect(Collectors.toList());
 
-        return PostResDTO.postListResponse.builder()
-                .posts(items)
-                .pagination(PostResDTO.pagination.builder()
-                        .nextCursor(nextCursor)
-                        .hasNext(hasNext)
-                        .build())
-                .build();
+        return new PostResDTO.postListResponse(items, new PostResDTO.pagination(nextCursor, hasNext));
     }
 
     public PostResDTO.likeResult toggleLike(int id, Integer postId) {
@@ -173,10 +194,23 @@ public class PostService {
             type = "CREATE";
         }
 
-        return PostResDTO.likeResult.builder()
-                .userId(user.getUserId())
-                .postId(postId)
-                .type(type)
-                .build();
+        return new PostResDTO.likeResult(user.getUserId(), postId, type);
+    }
+
+    private String uploadImageIfPresent(MultipartFile file) {
+        if (file == null || file.isEmpty()) return null;
+        return fileService.postSave(file);
+    }
+
+    private void registerImageRollbackOnFailure(String imageUrl) {
+        if (imageUrl == null) return;
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCompletion(int status) {
+                if (status == TransactionSynchronization.STATUS_ROLLED_BACK) {
+                    fileService.deleteSafely(imageUrl);
+                }
+            }
+        });
     }
 }

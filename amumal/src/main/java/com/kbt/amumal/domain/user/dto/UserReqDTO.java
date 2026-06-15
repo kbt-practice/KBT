@@ -1,53 +1,40 @@
 package com.kbt.amumal.domain.user.dto;
 
-import lombok.Getter;
-import lombok.Setter;
+import com.kbt.amumal.global.common.ValidationMessage;
 import jakarta.validation.constraints.*;
-import org.springframework.web.multipart.MultipartFile;
 
 public class UserReqDTO {
-    // 회원가입 요청 DTO
-    @Getter
-    @Setter
-    public static class Signup {
-        @NotBlank(message = "이메일을 입력해주세요.")
-        @Email(message = "올바른 이메일 주소 형식을 입력해주세요. (예: example@example.com)")
-        private String email;
 
-        @NotBlank(message = "비밀번호를 입력해주세요.")
-        @Pattern(
-                regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[\\W_]).{8,20}$",
-                message = "비밀번호는 8자 이상, 20자 이하이며, 대문자, 소문자, 숫자, 특수문자를 각각 최소 1개 포함해야 합니다."
-        )
-        private String password;
+    public record Signup(
+            @NotBlank(message = ValidationMessage.REQUIRED_EMAIL)
+            @Email(message = ValidationMessage.INVALID_EMAIL_FORMAT)
+            String email,
 
-        @NotBlank(message = "닉네임을 입력해주세요.")
-        @Size(max = 10, message = "닉네임은 최대 10자 까지 작성 가능합니다.")
-        @Pattern(regexp = "^\\S+$", message = "띄어쓰기를 없애주세요.")
-        private String nickname;
+            @NotBlank(message = ValidationMessage.REQUIRED_PASSWORD)
+            @Pattern(
+                    regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[\\W_]).{8,20}$",
+                    message = ValidationMessage.INVALID_PASSWORD_FORMAT
+            )
+            String password,
 
-        private MultipartFile profileImage;
-    }
+            @NotBlank(message = ValidationMessage.REQUIRED_NICKNAME)
+            @Size(max = 10, message = ValidationMessage.NICKNAME_MAX_LENGTH)
+            @Pattern(regexp = "^\\S+$", message = ValidationMessage.NICKNAME_NO_SPACE)
+            String nickname
+    ) {}
 
-    @Getter
-    public static class UpdateNickname {
-        @NotBlank(message = "닉네임은 필수입니다.")
-        @Size(max = 10, message = "닉네임은 최대 10자 까지 작성 가능합니다.")
-        private String nickname;
-    }
+    public record UpdateNickname(
+            @NotBlank(message = ValidationMessage.NICKNAME_REQUIRED_UPDATE)
+            @Size(max = 10, message = ValidationMessage.NICKNAME_MAX_LENGTH)
+            String nickname
+    ) {}
 
-    @Getter
-    public static class UpdatePassword {
-        @NotBlank(message = "비밀번호를 입력해주세요.")
-        @Pattern(
-                regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[\\W_]).{8,20}$",
-                message = "비밀번호는 8자 이상, 20자 이하이며, 대문자, 소문자, 숫자, 특수문자를 각각 최소 1개 포함해야 합니다."
-        )
-        private String password;
-    }
-
-    @Getter
-    public static class updateProfile {
-        private MultipartFile profileImage;
-    }
+    public record UpdatePassword(
+            @NotBlank(message = ValidationMessage.REQUIRED_PASSWORD)
+            @Pattern(
+                    regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[\\W_]).{8,20}$",
+                    message = ValidationMessage.INVALID_PASSWORD_FORMAT
+            )
+            String password
+    ) {}
 }

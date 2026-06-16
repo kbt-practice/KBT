@@ -66,11 +66,11 @@ public class UserController {
         return ApiResponse.success("유저 비밀번호 수정 성공", null);
     }
 
-    @Operation(summary = "프로필 이미지 수정")
+    @Operation(summary = "프로필 이미지 수정", description = "파일을 전송하면 이미지 변경, 파일 없이 요청하면 이미지를 null로 초기화합니다.")
     @PutMapping(value = "/profileImage", consumes = "multipart/form-data")
     public ApiResponse<?> updateUserProfileImage(
             @LoginUserId int userId,
-            @RequestParam MultipartFile profileImage
+            @RequestParam(required = false) MultipartFile profileImage
     ) {
         userService.updateProfileImage(userId, profileImage);
 

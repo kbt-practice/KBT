@@ -40,7 +40,8 @@ public class WebConfig implements WebMvcConfigurer {
                         "http://localhost:8080"
                 )
                 .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
-                .allowedHeaders("Content-Type", "Authorization");
+                .allowedHeaders("Content-Type", "Authorization")
+                .allowCredentials(true); // 쿠키 포함 요청 허용 (SameSite=None Secure 쿠키와 함께 사용)
     }
 
     // 정적 리소스 경로 매핑: env의 접근 경로 요청을 실제 업로드 디렉토리로 연결

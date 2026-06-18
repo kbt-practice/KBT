@@ -70,10 +70,10 @@ public class AuthController {
     private ResponseCookie buildRefreshCookie(String value, long maxAgeSeconds) {
         return ResponseCookie.from("refreshToken", value)
                 .httpOnly(true)
-                .secure(true)
                 .sameSite("None")
+                .secure(true)
                 .domain(".amon.p-e.kr")
-                .path("/auth")
+                .path("/")
                 .maxAge(maxAgeSeconds)
                 .build();
     }

@@ -11,7 +11,6 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 @Component
 public class LoginUserArgumentResolver implements HandlerMethodArgumentResolver {
 
-    // @LoginUserId 어노테이션이 붙은 파라미터일 때만 이 Resolver가 동작하도록 true 반환
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
         return parameter.hasParameterAnnotation(LoginUserId.class);
@@ -21,6 +20,11 @@ public class LoginUserArgumentResolver implements HandlerMethodArgumentResolver 
     @Override
     public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer,
                                   NativeWebRequest webRequest, WebDataBinderFactory binderFactory) {
+        Class<?> type = parameter.getParameterType();
+        if (type != int.class && type != Integer.class) {
+            throw new IllegalStateException("@LoginUserId는 int 또는 Integer 타입에만 사용할 수 있습니다.");
+        }
+
         HttpServletRequest request = (HttpServletRequest) webRequest.getNativeRequest();
         return request.getAttribute("userId"); // @LoginUserId 파라미터에 자동으로 주입
     }

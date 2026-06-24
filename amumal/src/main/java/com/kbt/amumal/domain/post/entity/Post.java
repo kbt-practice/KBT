@@ -25,6 +25,9 @@ public class Post extends BaseEntity {
     @Column(length = 500)
     private String postImageUrl;
 
+    @Column(length = 255)
+    private String postImageOriginalName;
+
     @Column(nullable = false)
     private int userId;
 
@@ -40,8 +43,9 @@ public class Post extends BaseEntity {
         this.content = content;
     }
 
-    public void updatePostImage(String imageUrl) {
+    public void updatePostImage(String imageUrl, String originalName) {
         this.postImageUrl = imageUrl;
+        this.postImageOriginalName = originalName;
     }
 
     public void incrementViewCount() {
@@ -50,5 +54,6 @@ public class Post extends BaseEntity {
 
     public void clearPostImage() {
         this.postImageUrl = null;
+        this.postImageOriginalName = null;
     }
 }

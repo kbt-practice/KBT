@@ -39,10 +39,14 @@ public class PostService {
 
         registerImageRollbackOnFailure(postImageUrl);
 
+        String originalName = (postImage != null && !postImage.isEmpty())
+                ? postImage.getOriginalFilename() : null;
+
         Post newPost = postRepository.save(Post.builder()
                 .title(request.title())
                 .content(request.content())
                 .postImageUrl(postImageUrl)
+                .postImageOriginalName(originalName)
                 .userId(id)
                 .build());
 
@@ -76,7 +80,7 @@ public class PostService {
                 }
             });
 
-            post.updatePostImage(newImageUrl);
+            post.updatePostImage(newImageUrl, postImage.getOriginalFilename());
         }
     }
 

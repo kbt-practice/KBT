@@ -2,32 +2,36 @@ package com.kbt.amumal.global.common;
 
 import com.kbt.amumal.global.error.CustomException;
 import com.kbt.amumal.global.error.ErrorCode;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.Set;
 import java.util.UUID;
 
 /**
- * 이미지 파일 저장/삭제를 담당하는 핸들러.
+ * 이미지 파일 S3 저장/삭제를 담당하는 핸들러.
  *
  * 저장 시 3단계 보안 검증을 순서대로 수행한다.
  *   1. 파일 확장자 검증 (화이트리스트 방식)
  *   2. Content-Type 헤더 검증 (MIME 타입)
  *   3. Magic Bytes 검증 (실제 파일 내용)
  *
- * Content-Type은 클라이언트가 임의로 위조할 수 있으므로 Magic Bytes 검증이 최종 보루가 된다.
+ * 저장 경로:
+ *   - 프로필: {bucket}/backend/profile/{uuid}_{filename}
+ *   - 게시글: {bucket}/backend/post/{uuid}_{filename}
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class ImageHandler {
 
     /** 허용하는 파일 확장자 목록 (소문자 기준) */
@@ -38,59 +42,31 @@ public class ImageHandler {
             "image/jpg", "image/jpeg", "image/png", "image/gif", "image/webp"
     );
 
-    @Value("${file.upload-dir}")
-    private String uploadDir;
+    private static final String PROFILE_PREFIX = "backend/profile/";
+    private static final String POST_PREFIX = "backend/post/";
 
-    @Value("${file.profile-access-path}")
-    private String profileAccessPath;
+    private final S3Client s3Client;
 
-    @Value("${file.posts-access-path}")
-    private String postsAccessPath;
+    @Value("${aws.s3.bucket}")
+    private String bucket;
 
-    /**
-     * 프로필 이미지를 저장하고 접근 URL을 반환한다.
-     *
-     * @param file 업로드된 MultipartFile
-     * @return 저장된 파일의 접근 경로 (예: /profiles/uuid_filename.jpg)
-     * @throws CustomException 디렉토리 미존재, 유효성 검증 실패, IO 오류 시
-     */
+    @Value("${aws.region}")
+    private String region;
+
     public String profileSave(MultipartFile file) {
-        checkUploadDir();
         validateImage(file);
-        String filename = UUID.randomUUID() + "_" + file.getOriginalFilename();
-        Path imageFilePath = Paths.get(uploadDir, filename);
-        try {
-            Files.copy(file.getInputStream(), imageFilePath, StandardCopyOption.REPLACE_EXISTING);
-        } catch (IOException e) {
-            log.error("프로필 이미지 저장 실패: {}", filename, e);
-            throw new CustomException(ErrorCode.IMAGE_UPLOAD_FAILED);
-        }
-        return profileAccessPath + "/" + filename;
+        String key = PROFILE_PREFIX + UUID.randomUUID() + extractExtension(file.getOriginalFilename());
+        return upload(file, key);
     }
 
-    /**
-     * 게시글 이미지를 저장하고 접근 URL을 반환한다.
-     *
-     * @param file 업로드된 MultipartFile
-     * @return 저장된 파일의 접근 경로 (예: /profiles/uuid_filename.jpg)
-     * @throws CustomException 디렉토리 미존재, 유효성 검증 실패, IO 오류 시
-     */
     public String postSave(MultipartFile file) {
-        checkUploadDir();
         validateImage(file);
-        String filename = UUID.randomUUID() + "_" + file.getOriginalFilename();
-        Path imageFilePath = Paths.get(uploadDir, filename);
-        try {
-            Files.copy(file.getInputStream(), imageFilePath, StandardCopyOption.REPLACE_EXISTING);
-        } catch (IOException e) {
-            log.error("게시글 이미지 저장 실패: {}", filename, e);
-            throw new CustomException(ErrorCode.IMAGE_UPLOAD_FAILED);
-        }
-        return postsAccessPath + "/" + filename;
+        String key = POST_PREFIX + UUID.randomUUID() + extractExtension(file.getOriginalFilename());
+        return upload(file, key);
     }
 
     /**
-     * 이미지 URL에 해당하는 파일을 디스크에서 삭제한다.
+     * S3에서 이미지를 삭제한다.
      * URL이 null이거나 빈 값이면 아무 작업도 하지 않는다.
      * 삭제 실패 시 예외를 던지지 않고 경고 로그만 남긴다.
      * 트랜잭션 콜백 등 실패해도 롤백할 수 없는 컨텍스트에서 사용한다.
@@ -99,24 +75,44 @@ public class ImageHandler {
      */
     public void deleteSafely(String imageUrl) {
         if (imageUrl == null || imageUrl.isBlank()) return;
-        String filename = Paths.get(imageUrl).getFileName().toString();
-        Path filePath = Paths.get(uploadDir, filename);
         try {
-            Files.deleteIfExists(filePath);
-        } catch (IOException e) {
-            log.warn("이미지 삭제 실패 (고아 파일 가능성): {}", filePath, e);
+            String key = extractKey(imageUrl);
+            s3Client.deleteObject(DeleteObjectRequest.builder()
+                    .bucket(bucket)
+                    .key(key)
+                    .build());
+        } catch (Exception e) {
+            log.warn("S3 이미지 삭제 실패 (고아 파일 가능성): {}", imageUrl, e);
         }
     }
 
-    /**
-     * 업로드 디렉토리가 실제로 존재하는지 확인한다.
-     * 서버 설정 오류나 마운트 해제 등의 상황을 저장 전에 조기 감지하기 위해 매 저장마다 호출한다.
-     */
-    private void checkUploadDir() {
-        Path dirPath = Paths.get(uploadDir);
-        if (!Files.exists(dirPath) || !Files.isDirectory(dirPath)) {
-            throw new CustomException(ErrorCode.UPLOAD_DIR_NOT_FOUND);
+    private String upload(MultipartFile file, String key) {
+        try {
+            PutObjectRequest request = PutObjectRequest.builder()
+                    .bucket(bucket)
+                    .key(key)
+                    .contentType(file.getContentType())
+                    .contentLength(file.getSize())
+                    .build();
+            s3Client.putObject(request, RequestBody.fromBytes(file.getBytes()));
+            return "https://" + bucket + ".s3." + region + ".amazonaws.com/" + key;
+        } catch (IOException e) {
+            log.error("S3 이미지 업로드 실패: {}", key, e);
+            throw new CustomException(ErrorCode.IMAGE_UPLOAD_FAILED);
         }
+    }
+
+    /** 파일명에서 `.ext` 형식의 확장자를 반환한다. 확장자 없으면 빈 문자열. */
+    private String extractExtension(String originalFilename) {
+        if (originalFilename == null || !originalFilename.contains(".")) return "";
+        return "." + originalFilename.substring(originalFilename.lastIndexOf('.') + 1).toLowerCase();
+    }
+
+    /** URL에서 S3 객체 키를 추출한다 (`.amazonaws.com/` 이후 부분). */
+    private String extractKey(String imageUrl) {
+        int idx = imageUrl.indexOf(".amazonaws.com/");
+        if (idx == -1) return imageUrl;
+        return imageUrl.substring(idx + ".amazonaws.com/".length());
     }
 
     /**

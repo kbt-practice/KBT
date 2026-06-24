@@ -48,10 +48,6 @@ public class Post extends BaseEntity {
         this.postImageOriginalName = originalName;
     }
 
-    public void incrementViewCount() {
-        this.viewCount++;
-    }
-
     public void clearPostImage() {
         this.postImageUrl = null;
         this.postImageOriginalName = null;

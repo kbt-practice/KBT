@@ -2,12 +2,14 @@ package com.kbt.amumal.domain.post.service;
 
 import com.kbt.amumal.domain.comment.entity.Comment;
 import com.kbt.amumal.domain.comment.repository.commentRepository;
+import com.kbt.amumal.domain.post.dto.CountProjection;
 import com.kbt.amumal.domain.post.dto.PostReqDTO;
 import com.kbt.amumal.domain.post.dto.PostResDTO;
 import com.kbt.amumal.domain.post.entity.Like;
 import com.kbt.amumal.domain.post.entity.Post;
 import com.kbt.amumal.domain.post.repository.LikeRepository;
 import com.kbt.amumal.domain.post.repository.PostRepository;
+import com.kbt.amumal.domain.user.dto.UserProjection;
 import com.kbt.amumal.domain.user.entity.User;
 import com.kbt.amumal.domain.user.repository.UserRepository;
 import com.kbt.amumal.global.common.ImageHandler;
@@ -20,6 +22,7 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -104,27 +107,28 @@ public class PostService {
         postRepository.incrementViewCount(postId); // clearAutomatically = true → L1 캐시 초기화
         post = postRepository.findById(postId).orElseThrow(); // 증가된 viewCount 반영
 
-        User author = userRepository.findById(post.getUserId()).orElse(null);
         long likeCount = likeRepository.countByPostId(post.getPostId());
 
         List<Comment> comments = commentRepository
                 .findByPostIdAndDeletedAtIsNullOrderByCreatedAtAsc(post.getPostId());
 
-        // 댓글 작성자 ID 목록으로 한 번에 조회 (N+1 방지)
-        List<Integer> commenterIds = comments.stream()
-                .map(Comment::getUserId)
-                .distinct()
-                .collect(Collectors.toList());
-        Map<Integer, User> commenterMap = userRepository.findAllById(commenterIds).stream()
-                .collect(Collectors.toMap(User::getId, u -> u));
+        // 게시글 작성자 + 댓글 작성자 ID를 한 번에 모아 DTO Projection으로 조회 (N+1 방지)
+        List<Integer> userIds = new ArrayList<>();
+        userIds.add(post.getUserId());
+        comments.stream().map(Comment::getUserId).distinct().forEach(userIds::add);
+
+        Map<Integer, UserProjection> userMap = userRepository.findProjectionsByIdIn(userIds).stream()
+                .collect(Collectors.toMap(UserProjection::id, u -> u));
+
+        UserProjection author = userMap.get(post.getUserId());
 
         List<PostResDTO.commentItem> commentItems = comments.stream()
                 .map(comment -> {
-                    User commenter = commenterMap.get(comment.getUserId());
+                    UserProjection commenter = userMap.get(comment.getUserId());
                     return new PostResDTO.commentItem(
                             comment.getCommentId(),
                             comment.getContent(),
-                            commenter != null ? new PostResDTO.userInfo(commenter.getUserId(), commenter.getNickname(), commenter.getProfileImageUrl()) : null,
+                            commenter != null ? new PostResDTO.userInfo(commenter.userId(), commenter.nickname(), commenter.profileImageUrl()) : null,
                             comment.getCreatedAt()
                     );
                 })
@@ -137,7 +141,7 @@ public class PostService {
                 post.getPostImageUrl(),
                 likeCount,
                 post.getViewCount(),
-                author != null ? new PostResDTO.userInfo(author.getUserId(), author.getNickname(), author.getProfileImageUrl()) : null,
+                author != null ? new PostResDTO.userInfo(author.userId(), author.nickname(), author.profileImageUrl()) : null,
                 post.getCreatedAt(),
                 commentItems
         );
@@ -151,18 +155,23 @@ public class PostService {
 
         Integer nextCursor = hasNext ? posts.get(posts.size() - 1).getPostId() : null;
 
-        // 게시글 작성자 ID 목록으로 한 번에 조회 (N+1 방지)
-        List<Integer> authorIds = posts.stream()
-                .map(Post::getUserId)
-                .distinct()
-                .collect(Collectors.toList());
-        Map<Integer, User> authorMap = userRepository.findAllById(authorIds).stream()
-                .collect(Collectors.toMap(User::getId, u -> u));
+        List<Integer> postIds = posts.stream().map(Post::getPostId).collect(Collectors.toList());
+
+        // 작성자 DTO Projection으로 한 번에 조회
+        List<Integer> authorIds = posts.stream().map(Post::getUserId).distinct().collect(Collectors.toList());
+        Map<Integer, UserProjection> authorMap = userRepository.findProjectionsByIdIn(authorIds).stream()
+                .collect(Collectors.toMap(UserProjection::id, u -> u));
+
+        // 카운트 DTO Projection으로 한 번에 조회
+        Map<Integer, Long> likeCounts = likeRepository.countsByPostIds(postIds).stream()
+                .collect(Collectors.toMap(CountProjection::postId, CountProjection::count));
+        Map<Integer, Long> commentCounts = commentRepository.countsByPostIds(postIds).stream()
+                .collect(Collectors.toMap(CountProjection::postId, CountProjection::count));
 
         List<PostResDTO.postListItem> items = posts.stream().map(post -> {
-            User user = authorMap.get(post.getUserId());
-            long likeCount = likeRepository.countByPostId(post.getPostId());
-            long commentCount = commentRepository.countByPostIdAndDeletedAtIsNull(post.getPostId());
+            UserProjection user = authorMap.get(post.getUserId());
+            long likeCount = likeCounts.getOrDefault(post.getPostId(), 0L);
+            long commentCount = commentCounts.getOrDefault(post.getPostId(), 0L);
 
             return new PostResDTO.postListItem(
                     post.getPostId(),
@@ -171,7 +180,7 @@ public class PostService {
                     likeCount,
                     commentCount,
                     post.getViewCount(),
-                    user != null ? new PostResDTO.userInfo(user.getUserId(), user.getNickname(), user.getProfileImageUrl()) : null,
+                    user != null ? new PostResDTO.userInfo(user.userId(), user.nickname(), user.profileImageUrl()) : null,
                     post.getCreatedAt()
             );
         }).collect(Collectors.toList());

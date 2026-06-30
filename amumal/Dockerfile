@@ -1,6 +1,6 @@
 FROM eclipse-temurin:26-jre-jammy
 
-ENV TZ=Asia/Seoul
+ENV TZ=Etc/UTC
 
 WORKDIR /app
 

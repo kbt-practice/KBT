@@ -15,4 +15,4 @@ public class AmumalApplication {
 	}
 }
 
-// 테스트를 위한 주석 추가 22
+// 테스트를 위한 주석 수정

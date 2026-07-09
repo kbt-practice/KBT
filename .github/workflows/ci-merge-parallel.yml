@@ -1,11 +1,11 @@
-name: dev merge CI
+name: dev merge CI parallel
 
 on:
   push:
     branches: [dev]
 
 concurrency:
-  group: ci-dev
+  group: ci-dev-parallel
   cancel-in-progress: true
 
 permissions:

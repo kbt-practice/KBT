@@ -1,11 +1,55 @@
-# 디폴트 무시된 파일
-/shelf/
-/.idea/workspace.xml
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# Java
+*.class
+*.log
+
+# Spring Boot / local environment
+.env
+.env.*
+!.env.example
+application-local.properties
+application-local.yml
+application-*.local.properties
+application-*.local.yml
+
+# IDEs
 .idea/
-# 에디터 기반 HTTP 클라이언트 요청
-/httpRequests/
-# 쿼리 파일을 포함한 무시된 디폴트 폴더
-/queries/
-# Datasource local storage ignored files
-/dataSources/
-/dataSources.local.xml
+*.iml
+*.ipr
+*.iws
+.vscode/
+.classpath
+.project
+.settings/
+.apt_generated/
+.factorypath
+.springBeans
+.sts4-cache/
+out/
+bin/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Runtime / temporary files
+tmp/
+*.pid
+*.seed
+*.tmp
+
+# Secrets and certificates
+*.pem
+*.key
+*.crt
+*.p12
+*.jks
+
+# Uploaded/static generated files
+/src/main/resources/static/profiles/

@@ -1,0 +1,19 @@
+# 비밀값
+.env
+*.pem
+*.key
+
+# 빌드 산출물
+build/
+.gradle/
+
+# git
+.git
+.github
+.idea
+*.iml
+
+# 인프라 파일
+docker-compose.yml
+nginx/
+certbot/

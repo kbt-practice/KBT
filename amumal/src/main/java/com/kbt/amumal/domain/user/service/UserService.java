@@ -34,11 +34,15 @@ public class UserService {
         // 이미지 업로드 성공 후 DB 저장에 실패하면 트랜잭션 롤백 콜백에서 파일 정리
         registerImageRollbackOnFailure(profileImageUrl);
 
+        String originalName = (profileImage != null && !profileImage.isEmpty())
+                ? profileImage.getOriginalFilename() : null;
+
         User newUser = userRepository.save(User.builder()
                 .email(request.email())
                 .password(passwordEncoder.encode(request.password()))
                 .nickname(request.nickname())
                 .profileImageUrl(profileImageUrl)
+                .profileImageOriginalName(originalName)
                 .build());
 
         return newUser.getUserId();
@@ -83,6 +87,23 @@ public class UserService {
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         String oldImageUrl = user.getProfileImageUrl();
+
+        // null 또는 빈 파일 → 이미지 초기화
+        if (profileImage == null || profileImage.isEmpty()) {
+            user.updateProfileImage(null, null);
+            if (oldImageUrl != null) {
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCompletion(int status) {
+                        if (status == TransactionSynchronization.STATUS_COMMITTED) {
+                            fileService.deleteSafely(oldImageUrl);
+                        }
+                    }
+                });
+            }
+            return;
+        }
+
         String newImageUrl = fileService.profileSave(profileImage);
 
         // 커밋 성공 시 기존 이미지 삭제, 롤백 시 새로 업로드한 이미지 삭제
@@ -97,7 +118,7 @@ public class UserService {
             }
         });
 
-        user.updateProfileImage(newImageUrl);
+        user.updateProfileImage(newImageUrl, profileImage.getOriginalFilename());
     }
 
     private String uploadImageIfPresent(MultipartFile file) {

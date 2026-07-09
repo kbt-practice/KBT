@@ -32,6 +32,9 @@ public class User extends BaseEntity {
     @Column(length = 500)
     private String profileImageUrl;
 
+    @Column(length = 255)
+    private String profileImageOriginalName;
+
     @PrePersist
     private void generateUserId() {
         if (userId == null) {
@@ -47,7 +50,8 @@ public class User extends BaseEntity {
         this.password = password;
     }
 
-    public void updateProfileImage(String profileImageUrl) {
+    public void updateProfileImage(String profileImageUrl, String originalName) {
         this.profileImageUrl = profileImageUrl;
+        this.profileImageOriginalName = originalName;
     }
 }

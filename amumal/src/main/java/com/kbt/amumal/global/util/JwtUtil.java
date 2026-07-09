@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
+import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.Date;
 
@@ -16,15 +17,18 @@ import java.util.Date;
 public class JwtUtil {
 
     private final Key key; // 서명에 사용할 HMAC 키
-    private final long accessTokenExpTime; // 액세스 토큰 만료 시간 (초)
+    private final long accessTokenExpTime;   // 액세스 토큰 만료 시간 (초)
+    private final long refreshTokenExpTime;  // 리프레시 토큰 만료 시간 (초)
 
     public JwtUtil(
             @Value("${jwt.secret}") String secretKey,
-            @Value("${jwt.expiration_time}") long accessTokenExpTime
+            @Value("${jwt.expiration_time}") long accessTokenExpTime,
+            @Value("${jwt.refresh_expiration_time}") long refreshTokenExpTime
     ) {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey); // Base64 디코딩
         this.key = Keys.hmacShaKeyFor(keyBytes); // HMAC-SHA 키 생성
         this.accessTokenExpTime = accessTokenExpTime;
+        this.refreshTokenExpTime = refreshTokenExpTime;
     }
 
     // 액세스 토큰 생성
@@ -32,10 +36,15 @@ public class JwtUtil {
         return createToken(id, email, accessTokenExpTime);
     }
 
+    // 리프레시 토큰 생성
+    public String createRefreshToken(int id, String email) {
+        return createToken(id, email, refreshTokenExpTime);
+    }
+
     // JWT 생성
-    private String createToken(int id, String email, long expireTime) {
+    private String createToken(int id, String email, long expireTimeMs) {
         ZonedDateTime now = ZonedDateTime.now();
-        ZonedDateTime tokenValidity = now.plusSeconds(expireTime);
+        ZonedDateTime tokenValidity = now.plus(Duration.ofMillis(expireTimeMs));
 
         return Jwts.builder()
                 .claim("id", id)
@@ -51,7 +60,11 @@ public class JwtUtil {
         return parseClaims(token).get("id", Integer.class);
     }
 
-    // JWT 유효성 검증
+    // 토큰에서 email 추출
+    public String getEmail(String token) {
+        return parseClaims(token).get("email", String.class);
+    }
+
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
@@ -71,9 +84,9 @@ public class JwtUtil {
     }
 
     // JWT 페이로드 추출
-    public Claims parseClaims(String accessToken) {
+    public Claims parseClaims(String token) {
         try {
-            return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(accessToken).getBody();
+            return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
         } catch (ExpiredJwtException e) {
             return e.getClaims(); // 만료된 토큰도 claims 반환 (토큰 재발급 시 userId 필요)
         }

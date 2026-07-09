@@ -47,7 +47,6 @@ public enum ErrorCode {
     // 이미지
     INVALID_IMAGE_EXTENSION(HttpStatus.BAD_REQUEST, "유효하지 않은 요청입니다.", "허용되지 않는 이미지 확장자입니다. (jpg, jpeg, png, gif, webp)"),
     INVALID_IMAGE_MIME_TYPE(HttpStatus.BAD_REQUEST, "유효하지 않은 요청입니다.", "유효하지 않은 이미지 파일입니다."),
-    UPLOAD_DIR_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR, "서버 에러", "업로드 디렉토리를 찾을 수 없습니다."),
     IMAGE_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "서버 에러", "이미지 업로드에 실패했습니다.");
 
     private final HttpStatus status;

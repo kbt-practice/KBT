@@ -14,3 +14,5 @@ public class AmumalApplication {
 		SpringApplication.run(AmumalApplication.class, args);
 	}
 }
+
+// 테스트를 위한 주석 추가

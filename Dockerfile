@@ -28,9 +28,11 @@ WORKDIR /app
 COPY --from=builder /app/build/libs/*.jar app.jar
 
 # 권한 한번에 부여
-RUN chmod 400 app.jar && \
-    chown spring:spring /app && \
+RUN chown spring:spring /app /app/app.jar && \
+    chmod 400 app.jar && \
     chmod 500 /app
 
+EXPOSE 8080
+
 USER spring
-ENTRYPOINT ["java", "-jar", "-Dspring.profiles.active=prod", "app.jar"]
+ENTRYPOINT ["java", "-Dspring.profiles.active=prod", "-jar", "app.jar"]

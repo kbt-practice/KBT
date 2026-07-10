@@ -11,12 +11,14 @@ x-amumal-common: &amumal-common
   read_only: true
   tmpfs:
     - /tmp
+  environment:
+    LOGGING_FILE_NAME: /tmp/app.log
   env_file:
     - ${APP_ENV_FILE:-.env}
   extra_hosts:
     - "host.docker.internal:host-gateway"
   healthcheck:
-    test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/localhost/8080 && printf 'GET /v3/api-docs HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && cat <&3 | grep -q '200' || exit 1"]
+    test: ["CMD-SHELL", "timeout 3 bash -c '</dev/tcp/127.0.0.1/8080'"]
     interval: 30s
     timeout: 5s
     retries: 3

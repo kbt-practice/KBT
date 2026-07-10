@@ -87,8 +87,10 @@ fi
 export IMAGE_TAG=$NEW_TAG
 export APP_ENV_FILE="$NEW_ENV_PATH"
 docker compose pull "$TARGET_SERVICE"
-if ! docker compose up -d --wait --wait-timeout 60 "$TARGET_SERVICE"; then
+if ! docker compose up -d --wait --wait-timeout 60 --remove-orphans "$TARGET_SERVICE"; then
   echo "새 버전 헬스체크 실패: $TARGET_SERVICE"
+  docker compose ps || true
+  docker compose logs --no-color --tail=200 "$TARGET_SERVICE" || true
   docker compose stop "$TARGET_SERVICE" || true
   exit 1
 fi

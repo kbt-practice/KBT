@@ -35,7 +35,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '26'
+          java-version: '21'
           cache: 'gradle'
 
       - name: 테스트 컨테이너 실행 및 헬스체크

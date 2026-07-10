@@ -1,6 +1,6 @@
 # 빌드 스테이지 (빌드 캐시에만 남음)
 # 빌드 시 사용되는 임시 공간이라고 보면 된다 - 때문에 빌드하는 공간에 그만큼의 임시 여유공간이 필요하다.
-FROM eclipse-temurin:26-jdk-jammy AS builder
+FROM eclipse-temurin:21-jdk-jammy AS builder
 
 WORKDIR /app
 
@@ -14,7 +14,7 @@ COPY src src
 RUN ./gradlew clean bootJar -x test --no-daemon
 
 # 실행 스테이지 (빌드 도구 제외)
-FROM eclipse-temurin:26-jre-jammy
+FROM eclipse-temurin:21-jre-jammy
 
 # non-root 사용자 생성
 RUN groupadd -g 1000 spring && \
@@ -35,4 +35,4 @@ RUN chown spring:spring /app /app/app.jar && \
 EXPOSE 8080
 
 USER spring
-ENTRYPOINT ["java", "-Dspring.profiles.active=prod", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-jar", "app.jar"]

@@ -20,7 +20,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '26'
+          java-version: '21'
           cache: 'gradle'
       - name: 단위 테스트 실행
         run: ./gradlew test --no-daemon

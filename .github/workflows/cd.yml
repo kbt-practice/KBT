@@ -69,10 +69,30 @@ jobs:
           EC2_INSTANCE_ID: ${{ secrets.EC2_INSTANCE_ID }}
         run: |
           BACKEND_ENV_B64=$(printf '%s' "$BACKEND_ENV" | base64 -w 0)
+          DEPLOY_SH_B64=$(base64 -w 0 deploy.sh)
+          COMPOSE_B64=$(base64 -w 0 docker-compose.yaml)
+
+          jq -n \
+            --arg deploy_sh "$DEPLOY_SH_B64" \
+            --arg compose "$COMPOSE_B64" \
+            --arg tag "${{ github.sha }}" \
+            --arg backend_env "$BACKEND_ENV_B64" \
+            '{
+              commands: [
+                "set -e",
+                "mkdir -p /home/ubuntu/amumal",
+                "cd /home/ubuntu/amumal",
+                ("printf %s " + ($deploy_sh | @sh) + " | base64 -d > deploy.sh"),
+                ("printf %s " + ($compose | @sh) + " | base64 -d > docker-compose.yaml"),
+                "chmod +x deploy.sh",
+                ("./deploy.sh " + ($tag | @sh) + " " + ($backend_env | @sh))
+              ]
+            }' > ssm-parameters.json
+
           COMMAND_ID=$(aws ssm send-command \
             --instance-ids "$EC2_INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
-            --parameters commands="[\"cd /home/ubuntu/amumal && ./deploy.sh ${{ github.sha }} '$BACKEND_ENV_B64'\"]" \
+            --parameters file://ssm-parameters.json \
             --query "Command.CommandId" --output text)
           aws ssm wait command-executed \
             --command-id "$COMMAND_ID" \

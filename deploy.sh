@@ -2,15 +2,19 @@
 set -e
 NEW_TAG=$1
 BACKEND_ENV_B64=${2:-}
-cd /home/ubuntu/amumal
+APP_DIR=${APP_DIR:-/home/ubuntu/amumal}
+mkdir -p "$APP_DIR"
+cd "$APP_DIR"
 
 DEPLOY_DIR=".deploy"
 ENV_DIR="$DEPLOY_DIR/env"
 NGINX_DIR="$DEPLOY_DIR/nginx"
+NGINX_CONFIG_DIR="nginx"
 UPSTREAM_FILE="$NGINX_DIR/app-upstream.inc"
+NGINX_DEFAULT_CONF="$NGINX_CONFIG_DIR/default.conf"
 CURRENT_COLOR_FILE="$DEPLOY_DIR/current_color"
 
-mkdir -p "$ENV_DIR" "$NGINX_DIR"
+mkdir -p "$ENV_DIR" "$NGINX_DIR" "$NGINX_CONFIG_DIR"
 umask 077
 
 # --- 상태 파일 헬퍼 (색상별 tag / env 경로를 하나로 통일) ---
@@ -35,7 +39,34 @@ EOF
   chmod 600 "$UPSTREAM_FILE"
 }
 
+ensure_nginx_config() {
+  if [ -f "$NGINX_DEFAULT_CONF" ]; then
+    return
+  fi
+
+  cat > "$NGINX_DEFAULT_CONF" <<'EOF'
+server {
+    listen 80;
+    server_name _;
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    location / {
+        include /etc/nginx/conf.d/app-upstream.inc;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+EOF
+  chmod 600 "$NGINX_DEFAULT_CONF"
+}
+
 reload_nginx() {
+  ensure_nginx_config
   docker compose up -d nginx
   docker compose exec -T nginx nginx -s reload
 }

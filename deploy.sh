@@ -39,11 +39,60 @@ EOF
   chmod 600 "$UPSTREAM_FILE"
 }
 
-ensure_nginx_config() {
-  if [ -f "$NGINX_DEFAULT_CONF" ]; then
-    return
+get_server_name() {
+  local env_path="$1"
+  local server_url=""
+
+  if [ -f "$env_path" ]; then
+    server_url=$(grep -E '^SERVER_URL=' "$env_path" | tail -n 1 | cut -d= -f2- | tr -d '\r')
   fi
 
+  server_url=${server_url#http://}
+  server_url=${server_url#https://}
+  server_url=${server_url%%/*}
+  server_url=${server_url%%:*}
+
+  echo "${server_url:-api.sub.amon.p-e.kr}"
+}
+
+ensure_nginx_config() {
+  local server_name="$1"
+  local cert_file="/etc/letsencrypt/live/${server_name}/fullchain.pem"
+  local key_file="/etc/letsencrypt/live/${server_name}/privkey.pem"
+
+  if [ -f "$cert_file" ] && [ -f "$key_file" ]; then
+    cat > "$NGINX_DEFAULT_CONF" <<EOF
+server {
+    listen 80;
+    server_name ${server_name};
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    location / {
+        return 301 https://\$host\$request_uri;
+    }
+}
+
+server {
+    listen 443 ssl;
+    server_name ${server_name};
+
+    ssl_certificate ${cert_file};
+    ssl_certificate_key ${key_file};
+
+    location / {
+        include /etc/nginx/conf.d/app-upstream.inc;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+}
+EOF
+  else
+    echo "TLS 인증서를 찾지 못해 HTTP nginx 설정만 생성합니다: $server_name"
   cat > "$NGINX_DEFAULT_CONF" <<'EOF'
 server {
     listen 80;
@@ -62,11 +111,12 @@ server {
     }
 }
 EOF
+  fi
   chmod 600 "$NGINX_DEFAULT_CONF"
 }
 
 reload_nginx() {
-  ensure_nginx_config
+  ensure_nginx_config "$1"
   docker compose up -d nginx
   docker compose exec -T nginx nginx -s reload
 }
@@ -83,6 +133,7 @@ if [ -n "$BACKEND_ENV_B64" ]; then
 else
   NEW_ENV_PATH="$CURRENT_ENV_PATH"
 fi
+SERVER_NAME=$(get_server_name "$NEW_ENV_PATH")
 
 export IMAGE_TAG=$NEW_TAG
 export APP_ENV_FILE="$NEW_ENV_PATH"
@@ -96,11 +147,11 @@ if ! docker compose up -d --wait --wait-timeout 60 --remove-orphans "$TARGET_SER
 fi
 
 write_upstream_file "$TARGET_COLOR"
-if ! reload_nginx; then
+if ! reload_nginx "$SERVER_NAME"; then
   echo "Nginx 트래픽 전환 실패: $TARGET_COLOR"
   if [ -n "$CURRENT_COLOR" ]; then
     write_upstream_file "$CURRENT_COLOR"
-    reload_nginx || true
+    reload_nginx "$SERVER_NAME" || true
   fi
   exit 2
 fi

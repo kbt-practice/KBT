@@ -16,7 +16,7 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: ${{ secrets.BACKEND_ENV }}
+    environment: backend_env
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4

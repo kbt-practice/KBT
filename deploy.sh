@@ -35,20 +35,6 @@ EOF
   chmod 600 "$UPSTREAM_FILE"
 }
 
-check_health() {
-  local service="$1"
-  for i in $(seq 1 12); do
-    sleep 5
-    local container_id
-    container_id=$(docker compose ps -q "$service" 2>/dev/null || true)
-    [ -z "$container_id" ] && continue
-    local status
-    status=$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "$container_id" 2>/dev/null || echo "missing")
-    [ "$status" = "healthy" ] && return 0
-  done
-  return 1
-}
-
 reload_nginx() {
   docker compose up -d nginx
   docker compose exec -T nginx nginx -s reload
@@ -70,9 +56,7 @@ fi
 export IMAGE_TAG=$NEW_TAG
 export APP_ENV_FILE="$NEW_ENV_PATH"
 docker compose pull "$TARGET_SERVICE"
-docker compose up -d "$TARGET_SERVICE"
-
-if ! check_health "$TARGET_SERVICE"; then
+if ! docker compose up -d --wait --wait-timeout 60 "$TARGET_SERVICE"; then
   echo "새 버전 헬스체크 실패: $TARGET_SERVICE"
   docker compose stop "$TARGET_SERVICE" || true
   exit 1

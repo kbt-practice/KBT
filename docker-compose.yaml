@@ -1,7 +1,7 @@
 name: amumal-stack
 
 x-amumal-common: &amumal-common
-  image: mingkiboo/amumal-amon:${IMAGE_TAG:-latest}
+  image: mingkiboo/amumal-amon:${IMAGE_TAG:?IMAGE_TAG must be set}
   user: "1000:1000"
   security_opt:
     - no-new-privileges:true

@@ -11,6 +11,9 @@ concurrency:
 permissions:
   contents: read
 
+env:
+  IMAGE_NAME: mingkiboo/amumal-amon
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -54,5 +57,16 @@ jobs:
         with:
           context: .
           push: false
+          load: true
+          tags: ${{ env.IMAGE_NAME }}:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Trivy 이미지 취약점 검사
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ${{ env.IMAGE_NAME }}:${{ github.sha }}
+          format: table
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: '1'

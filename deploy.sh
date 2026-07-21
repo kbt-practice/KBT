@@ -11,7 +11,6 @@ ENV_DIR="$DEPLOY_DIR/env"
 NGINX_DIR="$DEPLOY_DIR/nginx"
 NGINX_CONFIG_DIR="nginx"
 UPSTREAM_FILE="$NGINX_DIR/app-upstream.inc"
-NGINX_DEFAULT_CONF="$NGINX_CONFIG_DIR/default.conf"
 CURRENT_COLOR_FILE="$DEPLOY_DIR/current_color"
 
 mkdir -p "$ENV_DIR" "$NGINX_DIR" "$NGINX_CONFIG_DIR"
@@ -39,9 +38,69 @@ EOF
   chmod 600 "$UPSTREAM_FILE"
 }
 
+get_server_name() {
+  local env_path="$1"
+  local server_url=""
+
+  if [ -f "$env_path" ]; then
+    server_url=$(grep -E '^SERVER_URL=' "$env_path" | tail -n 1 | cut -d= -f2- | tr -d '\r')
+  fi
+
+  server_url=${server_url#http://}
+  server_url=${server_url#https://}
+  server_url=${server_url%%/*}
+  server_url=${server_url%%:*}
+
+  echo "${server_url:-api.sub.amon.p-e.kr}"
+}
+
+ensure_nginx_config() {
+  local server_name="$1"
+  local cert_file="/etc/letsencrypt/live/${server_name}/fullchain.pem"
+  local key_file="/etc/letsencrypt/live/${server_name}/privkey.pem"
+
+  # HTTPS 배포에서 인증서가 없는 상태를 HTTP로 묵시적으로 폴백하지 않는다.
+  if [ ! -f "$cert_file" ] || [ ! -f "$key_file" ]; then
+    echo "TLS 인증서를 찾을 수 없습니다: $server_name" >&2
+    return 1
+  fi
+
+  cat > "$NGINX_CONFIG_DIR/default.conf" <<EOF
+server {
+    listen 80;
+    server_name ${server_name};
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    location / {
+        return 301 https://\$host\$request_uri;
+    }
+}
+
+server {
+    listen 443 ssl;
+    server_name ${server_name};
+
+    ssl_certificate ${cert_file};
+    ssl_certificate_key ${key_file};
+
+    location / {
+        include /etc/nginx/conf.d/app-upstream.inc;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+}
+EOF
+  chmod 600 "$NGINX_CONFIG_DIR/default.conf"
+}
+
 reload_nginx() {
+  ensure_nginx_config "$1"
   docker compose up -d nginx
-  docker compose exec -T nginx nginx -t
   docker compose exec -T nginx nginx -s reload
 }
 
@@ -57,6 +116,7 @@ if [ -n "$BACKEND_ENV_B64" ]; then
 else
   NEW_ENV_PATH="$CURRENT_ENV_PATH"
 fi
+SERVER_NAME=$(get_server_name "$NEW_ENV_PATH")
 
 export IMAGE_TAG=$NEW_TAG
 export APP_ENV_FILE="$NEW_ENV_PATH"
@@ -82,5 +142,13 @@ fi
 echo "$TARGET_COLOR" > "$CURRENT_COLOR_FILE"
 echo "$NEW_TAG" > "$(state_file tag "$TARGET_COLOR")"
 echo "$NEW_ENV_PATH" > "$(state_file env "$TARGET_COLOR")"
+
+# 새 컨테이너 헬스체크와 Nginx 트래픽 전환이 모두 성공했으므로 직전 컨테이너는 즉시 stop -> 빠른 복구 가능
+if [ -n "$CURRENT_COLOR" ]; then
+  docker compose stop "$(service_name "$CURRENT_COLOR")"
+fi
+
+# 두 컨테이너가 참조하지 않는 직전의 직전 이미지 정리
+docker image prune -a -f
 
 echo "블루-그린 배포 성공: $TARGET_COLOR -> $NEW_TAG"

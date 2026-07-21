@@ -13,6 +13,9 @@ permissions:
   id-token: write
   contents: read
 
+env:
+  IMAGE_NAME: mingkiboo/amumal-amon
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -53,6 +56,16 @@ jobs:
             mingkiboo/amumal-amon:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      # HIGH/CRITICAL 취약점이 있으면 EC2 배포 전에 워크플로를 실패시킨다.
+      - name: Trivy 이미지 취약점 검사
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ${{ env.IMAGE_NAME }}:${{ github.sha }}
+          format: table
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: '1'
 
       # AWS 인증 (OIDC)
       - name: AWS 인증

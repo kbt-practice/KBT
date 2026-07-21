@@ -11,7 +11,7 @@ services:
     ports:
       - "127.0.0.1:3306:3306"
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1:127.0.0.1", "-u", "root", "-proot"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-proot"]
       interval: 10s
       timeout: 5s
       retries: 5

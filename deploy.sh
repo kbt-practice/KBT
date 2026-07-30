@@ -64,38 +64,6 @@ ensure_nginx_config() {
     echo "TLS 인증서를 찾을 수 없습니다: $server_name" >&2
     return 1
   fi
-
-  cat > "$NGINX_CONFIG_DIR/default.conf" <<EOF
-server {
-    listen 80;
-    server_name ${server_name};
-
-    location /.well-known/acme-challenge/ {
-        root /var/www/certbot;
-    }
-
-    location / {
-        return 301 https://\$host\$request_uri;
-    }
-}
-
-server {
-    listen 443 ssl;
-    server_name ${server_name};
-
-    ssl_certificate ${cert_file};
-    ssl_certificate_key ${key_file};
-
-    location / {
-        include /etc/nginx/conf.d/app-upstream.inc;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-    }
-}
-EOF
-  chmod 600 "$NGINX_CONFIG_DIR/default.conf"
 }
 
 reload_nginx() {

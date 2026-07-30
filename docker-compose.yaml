@@ -13,8 +13,12 @@ x-amumal-common: &amumal-common
     - /tmp
   environment:
     LOGGING_FILE_NAME: /tmp/app.log
+    SPRING_PROFILES_ACTIVE: prod
+    SERVER_PORT: 8080
   env_file:
     - ${APP_ENV_FILE:-.env}
+  expose:
+    - "8080"
   extra_hosts:
     - "host.docker.internal:host-gateway"
   healthcheck:
@@ -51,28 +55,12 @@ services:
   amumal_green:
     <<: *amumal-common
 
-  socket-proxy:
-    image: tecnativa/docker-socket-proxy
-    restart: unless-stopped
-    environment:
-      CONTAINERS: 1
-      IMAGES: 1
-      POST: 1
-      EXEC: 0
-      VOLUMES: 0
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    networks:
-      - management_net
-
   portainer:
     image: portainer/portainer-ce:2.39.4
-    command: -H tcp://socket-proxy:2375
     restart: always
     volumes:
       - portainer_data:/data
-    depends_on:
-      - socket-proxy
+      - /var/run/docker.sock:/var/run/docker.sock
     healthcheck:
       disable: true
     networks:

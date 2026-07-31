@@ -294,7 +294,7 @@ alloy:
             action        = "keep"
           }
 
-          # 인프라 자체 로그는 제외하고 실제 서비스 로그만 Loki로 보낸다.
+          // 인프라 자체 로그는 제외하고 실제 서비스 로그만 Loki로 보낸다.
           rule {
             source_labels = ["__meta_kubernetes_namespace"]
             regex         = "(backend-ns|edge-ns|portainer-ns)"

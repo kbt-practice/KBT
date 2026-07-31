@@ -1,0 +1,43 @@
+replicaCount: 2
+
+# 리소스 이름 (Deployment와 Service 이름이 다르므로 분리)
+deploymentName: amumal-deployment
+serviceName: spring-clusterip
+
+# 3중 라벨 - selector / template / antiAffinity 전부 이거 하나 참조
+labels:
+  app: amumal
+  tier: backend
+  env: prod
+
+image:
+  repository: mingkiboo/amumal-amon
+  tag: latest
+  pullPolicy: IfNotPresent
+
+# 이미 backend-ns에 만들어둔 secret 참조
+imagePullSecret: regcred
+envSecret: amumal-env
+
+service:
+  type: ClusterIP
+  port: 8080
+  targetPort: 8080
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 1280Mi
+
+rollingUpdate:
+  maxSurge: 1
+  maxUnavailable: 0
+
+probes:
+  port: 8080
+  startupPath: /actuator/health
+  readinessPath: /actuator/health/readiness
+  livenessPath: /actuator/health/liveness

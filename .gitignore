@@ -53,3 +53,4 @@ tmp/
 
 # Uploaded/static generated files
 /src/main/resources/static/profiles/
+./claude

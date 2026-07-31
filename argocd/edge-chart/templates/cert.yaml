@@ -9,12 +9,13 @@ spec:
     privateKeySecretRef:
       name: {{ .Values.certManager.issuerName }}-account-key
     solvers:
-      - http01:
+        - http01:
           gatewayHTTPRoute:
             parentRefs:
-              - name: {{ .Values.gatewayName }}
-                namespace: {{ .Release.Namespace }}
+              - group: gateway.networking.k8s.io
                 kind: Gateway
+                name: {{ .Values.gatewayName }}
+                namespace: {{ .Release.Namespace }}
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate

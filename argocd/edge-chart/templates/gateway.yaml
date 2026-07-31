@@ -68,5 +68,6 @@ spec:
       tls:
         mode: Terminate
         certificateRefs:
-          - kind: Secret
+          - group: ""
+            kind: Secret
             name: {{ .Values.tls.secretName }}

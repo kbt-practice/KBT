@@ -24,7 +24,7 @@ storage:
     selectorLabel: grafana
 
 grafanaRoute:
-  serviceName: kube-prometheus-stack-grafana
+  serviceName: amumal-monitoring-grafana
   servicePort: 80
   host: grafana.sub.amon.p-e.kr
   gateway:

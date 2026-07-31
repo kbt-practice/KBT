@@ -41,3 +41,9 @@ probes:
   startupPath: /actuator/health
   readinessPath: /actuator/health/readiness
   livenessPath: /actuator/health/liveness
+
+gateway:
+  name: amumal-gateway
+  namespace: edge-ns
+  sectionName: https
+host: api.sub.amon.p-e.kr

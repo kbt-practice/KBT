@@ -150,7 +150,7 @@ jobs:
           ref: main
       - name: Bump tag in values.yaml
         run: |
-          sed -i "s|^  tag:.*|  tag: ${{ github.sha }}|" amumal-backend/values.yaml   # ② 경로 수정
+          sed -i "s|^  tag:.*|  tag: ${{ github.sha }}|" /argocd/amumal-backend/values.yaml   # ② 경로 수정
       - name: Commit & push
         run: |
           git config user.name "github-actions"

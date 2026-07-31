@@ -4,7 +4,9 @@ metadata:
   name: grafana-route
 spec:
   parentRefs:
-    - name: {{ .Values.grafanaRoute.gateway.name }}
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: {{ .Values.grafanaRoute.gateway.name }}
       namespace: {{ .Values.grafanaRoute.gateway.namespace }}
       sectionName: {{ .Values.grafanaRoute.gateway.sectionName }}
   hostnames:
@@ -15,5 +17,8 @@ spec:
             type: PathPrefix
             value: /
       backendRefs:
-        - name: {{ .Values.grafanaRoute.serviceName }}
+        - group: ""
+          kind: Service
+          name: {{ .Values.grafanaRoute.serviceName }}
           port: {{ .Values.grafanaRoute.servicePort }}
+          weight: 1

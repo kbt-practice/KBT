@@ -1,0 +1,38 @@
+# =====================================================================
+# 네임스페이스별 quota/limitrange 정의
+#  - templates/namespaces.yaml 에서 range로 반복 생성
+#  - 새 ns 추가 시 여기 항목만 추가하면 됨
+# =====================================================================
+namespaces:
+  - name: backend-ns
+    quota:
+      pods: "3"                 # replicas 2 + surge 1
+      requests.cpu: "300m"
+      requests.memory: 1536Mi
+      limits.cpu: "3"
+      limits.memory: 3840Mi
+    limitRange:
+      defaultRequest: { cpu: 100m, memory: 512Mi }
+      default:        { cpu: 1000m, memory: 1280Mi }
+
+  - name: edge-ns
+    quota:
+      pods: "4"
+      requests.cpu: "100m"
+      requests.memory: 128Mi
+      limits.cpu: "600m"
+      limits.memory: 320Mi
+    limitRange:
+      defaultRequest: { cpu: 10m, memory: 32Mi }
+      default:        { cpu: 100m, memory: 64Mi }
+
+  - name: portainer-ns
+    quota:
+      pods: "2"
+      requests.cpu: "100m"
+      requests.memory: 128Mi
+      limits.cpu: "400m"
+      limits.memory: 256Mi
+    limitRange:
+      defaultRequest: { cpu: 50m, memory: 64Mi }
+      default:        { cpu: 200m, memory: 128Mi }

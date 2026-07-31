@@ -1,0 +1,57 @@
+# =====================================================================
+# amumal-portainer 차트 values
+# =====================================================================
+
+# 리소스 이름 (deployment 이름이 레거시라 명시적으로 분리)
+deploymentName: portainer-statefulset   # 이름은 레거시, 실제 kind는 Deployment
+serviceName: portainer-clusterip
+
+# 3중 라벨 - selector / template 전부 이거 참조
+labels:
+  app: amumal
+  tier: portainer
+  env: prod
+
+replicaCount: 1
+
+image:
+  repository: portainer/portainer-k8s-beta
+  tag: linux-amd64
+  pullPolicy: IfNotPresent
+
+serviceAccount:
+  name: portainer-sa
+
+service:
+  type: ClusterIP
+  port: 9000
+  targetPort: 9000
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi
+
+probes:
+  port: 9000
+  path: /
+
+# hostPath PV (단일 노드 임시 방식, EBS CSI 이전 예정)
+persistence:
+  pvName: portainer-pv
+  claimName: portainer-data
+  size: 1Gi
+  hostPath: /data/portainer
+
+# Gateway 연동 (route)
+gateway:
+  name: amumal-gateway
+  namespace: edge-ns
+  sectionName: https
+host: portainer.sub.amon.p-e.kr
+
+# IP 화이트리스트 (portainer는 잠겨도 argocd로 접근 가능 -> 차트 포함 안전)
+allowedCIDR: 211.244.225.224/32

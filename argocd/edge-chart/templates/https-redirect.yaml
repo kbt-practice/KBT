@@ -2,16 +2,18 @@ apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
   name: https-redirect
-  namespace: edge-ns
+  namespace: {{ .Release.Namespace }}
 spec:
   parentRefs:
-    - name: amumal-gateway
-      namespace: edge-ns
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: {{ .Values.gatewayName }}
+      namespace: {{ .Release.Namespace }}
       sectionName: http
   hostnames:
-    - "api.sub.amon.p-e.kr"
-    - "portainer.sub.amon.p-e.kr"
-    - "argocd.sub.amon.p-e.kr"
+    - "api.{{ .Values.domainBase }}"
+    - "portainer.{{ .Values.domainBase }}"
+    - "argocd.{{ .Values.domainBase }}"
   rules:
     - filters:
         - type: RequestRedirect

@@ -155,6 +155,6 @@ jobs:
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
-          git add amumal-backend/values.yaml
+          git add argocd/amumal-backend/values.yaml
           git commit -m "chore: bump image ${{ github.sha }} [skip ci]" || echo "변경 없음"
           git push

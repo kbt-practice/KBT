@@ -10,7 +10,7 @@ spec:
   source:
     repoURL: https://github.com/kbt-practice/KBT.git
     targetRevision: main
-    path: edge-chart
+    path: argocd/edge-chart
   destination:
     server: https://kubernetes.default.svc
     namespace: edge-ns

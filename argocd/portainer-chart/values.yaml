@@ -39,12 +39,14 @@ probes:
   port: 9000
   path: /
 
-# hostPath PV (단일 노드 임시 방식, EBS CSI 이전 예정)
+# local PV (단일 노드 방식, EBS CSI 이전 예정)
 persistence:
+  storageClassName: portainer-local
   pvName: portainer-pv
   claimName: portainer-data
   size: 1Gi
   hostPath: /data/portainer
+  nodeName: worker-2
 
 # Gateway 연동 (route)
 gateway:

@@ -6,7 +6,7 @@
 namespaces:
   - name: backend-ns
     quota:
-      pods: "3"                 # replicas 2 + surge 1
+      pods: "3"
       requests.cpu: "300m"
       requests.memory: 1536Mi
       limits.cpu: "3"

@@ -38,9 +38,27 @@ resources:
     cpu: 1000m
     memory: 1280Mi
 
+securityContext:
+  pod:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+    seccompProfile:
+      type: RuntimeDefault
+  container:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+
 rollingUpdate:
   maxSurge: 1
   maxUnavailable: 0
+
+gracefulShutdown:
+  preStopDelaySeconds: 10
+  terminationGracePeriodSeconds: 30
 
 probes:
   port: 8080

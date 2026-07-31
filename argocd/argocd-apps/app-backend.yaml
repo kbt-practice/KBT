@@ -8,7 +8,7 @@ spec:
   source:
     repoURL: https://github.com/kbt-practice/KBT.git
     targetRevision: main
-    path: amumal-backend
+    path: argocd/amumal-backend
   destination:
     server: https://kubernetes.default.svc
     namespace: backend-ns

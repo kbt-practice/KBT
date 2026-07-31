@@ -10,7 +10,7 @@ spec:
     targetRevision: main
     path: argocd/monitoring-chart
     helm:
-      releaseName: amumal-monitoring
+      releaseName: argocd/amumal-monitoring
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring-ns

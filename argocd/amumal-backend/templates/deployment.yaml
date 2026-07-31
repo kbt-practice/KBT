@@ -19,6 +19,9 @@ spec:
       labels:
         {{- toYaml .Values.labels | nindent 8 }}
     spec:
+      terminationGracePeriodSeconds: {{ .Values.gracefulShutdown.terminationGracePeriodSeconds }}
+      securityContext:
+        {{- toYaml .Values.securityContext.pod | nindent 8 }}
       affinity:
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -33,12 +36,21 @@ spec:
       containers:
         - name: spring
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          securityContext:
+            {{- toYaml .Values.securityContext.container | nindent 12 }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - containerPort: {{ .Values.service.targetPort }}
           envFrom:
             - secretRef:
                 name: {{ .Values.envSecret }}
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - sleep {{ .Values.gracefulShutdown.preStopDelaySeconds }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           startupProbe:

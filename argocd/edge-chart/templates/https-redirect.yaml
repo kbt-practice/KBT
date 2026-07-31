@@ -15,7 +15,11 @@ spec:
     - "portainer.{{ .Values.domainBase }}"
     - "argocd.{{ .Values.domainBase }}"
   rules:
-    - filters:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      filters:
         - type: RequestRedirect
           requestRedirect:
             scheme: https

@@ -43,6 +43,7 @@ tmp/
 *.pid
 *.seed
 *.tmp
+argocd/monitoring-chart/charts/
 
 # Secrets and certificates
 *.pem

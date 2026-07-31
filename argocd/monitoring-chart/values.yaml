@@ -40,6 +40,29 @@ kube-prometheus-stack:
 
   defaultRules:
     create: true
+    rules:
+      alertmanager: false
+      configReloaders: false
+      etcd: false
+      kubeApiserverBurnrate: false
+      kubeApiserverHistogram: false
+      kubeApiserverSlos: false
+      kubeControllerManager: false
+      kubeProxy: false
+      kubeSchedulerAlerting: false
+      kubeSchedulerRecording: false
+      prometheusOperator: false
+      windows: false
+
+  # 소규모 클러스터에서 대시보드에 필요한 핵심 대상만 수집한다.
+  kubeControllerManager:
+    enabled: false
+  kubeScheduler:
+    enabled: false
+  kubeEtcd:
+    enabled: false
+  kubeProxy:
+    enabled: false
 
   grafana:
     enabled: true
@@ -70,31 +93,33 @@ kube-prometheus-stack:
         uid: loki
         type: loki
         access: proxy
-        url: http://loki-gateway.monitoring-ns.svc.cluster.local
+        url: http://loki.monitoring-ns.svc.cluster.local:3100
         editable: false
         jsonData:
           timeout: 60
-          maxLines: 1000
+          maxLines: 500
     resources:
       requests:
-        cpu: 100m
-        memory: 256Mi
+        cpu: 50m
+        memory: 128Mi
       limits:
-        cpu: 500m
-        memory: 512Mi
+        cpu: 300m
+        memory: 384Mi
 
   prometheus:
     prometheusSpec:
       replicas: 1
-      retention: 15d
-      retentionSize: 18GB
+      scrapeInterval: 30s
+      evaluationInterval: 30s
+      retention: 7d
+      retentionSize: 10GB
       resources:
         requests:
-          cpu: 500m
-          memory: 1Gi
+          cpu: 300m
+          memory: 768Mi
         limits:
-          cpu: "2"
-          memory: 3Gi
+          cpu: "1"
+          memory: 2Gi
       storageSpec:
         volumeClaimTemplate:
           spec:
@@ -109,42 +134,34 @@ kube-prometheus-stack:
                 monitoring.amon/component: prometheus
 
   alertmanager:
-    alertmanagerSpec:
-      replicas: 1
-      resources:
-        requests:
-          cpu: 50m
-          memory: 128Mi
-        limits:
-          cpu: 300m
-          memory: 256Mi
+    enabled: false
 
   prometheusOperator:
     resources:
       requests:
-        cpu: 100m
-        memory: 128Mi
-      limits:
-        cpu: 500m
-        memory: 512Mi
-
-  kube-state-metrics:
-    resources:
-      requests:
         cpu: 50m
-        memory: 64Mi
+        memory: 96Mi
       limits:
         cpu: 300m
         memory: 256Mi
 
+  kube-state-metrics:
+    resources:
+      requests:
+        cpu: 25m
+        memory: 48Mi
+      limits:
+        cpu: 200m
+        memory: 192Mi
+
   prometheus-node-exporter:
     resources:
       requests:
-        cpu: 50m
+        cpu: 25m
         memory: 32Mi
       limits:
-        cpu: 200m
-        memory: 128Mi
+        cpu: 100m
+        memory: 96Mi
 
 # =====================================================================
 # Loki 7.2.0
@@ -182,11 +199,11 @@ loki:
     replicas: 1
     resources:
       requests:
-        cpu: 200m
-        memory: 512Mi
+        cpu: 100m
+        memory: 256Mi
       limits:
-        cpu: "1"
-        memory: 2Gi
+        cpu: 500m
+        memory: 1Gi
     persistence:
       enabled: true
       enableStatefulSetAutoDeletePVC: false
@@ -206,15 +223,7 @@ loki:
     replicas: 0
 
   gateway:
-    enabled: true
-    replicas: 1
-    resources:
-      requests:
-        cpu: 50m
-        memory: 64Mi
-      limits:
-        cpu: 300m
-        memory: 256Mi
+    enabled: false
 
   chunksCache:
     enabled: false
@@ -227,9 +236,7 @@ loki:
 
   monitoring:
     serviceMonitor:
-      enabled: true
-      labels:
-        release: amumal-monitoring
+      enabled: false
     dashboards:
       enabled: true
 
@@ -243,6 +250,13 @@ alloy:
     type: daemonset
     tolerations:
       - operator: Exists
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: node-role.kubernetes.io/control-plane
+                  operator: DoesNotExist
 
   alloy:
     enableReporting: false
@@ -255,11 +269,11 @@ alloy:
             fieldPath: spec.nodeName
     resources:
       requests:
-        cpu: 50m
-        memory: 128Mi
+        cpu: 25m
+        memory: 96Mi
       limits:
-        cpu: 300m
-        memory: 256Mi
+        cpu: 200m
+        memory: 192Mi
     configMap:
       content: |-
         logging {
@@ -277,6 +291,13 @@ alloy:
           rule {
             source_labels = ["__meta_kubernetes_pod_node_name"]
             regex         = sys.env("NODE_NAME")
+            action        = "keep"
+          }
+
+          # 인프라 자체 로그는 제외하고 실제 서비스 로그만 Loki로 보낸다.
+          rule {
+            source_labels = ["__meta_kubernetes_namespace"]
+            regex         = "(backend-ns|edge-ns|portainer-ns)"
             action        = "keep"
           }
 
@@ -332,11 +353,9 @@ alloy:
 
         loki.write "default" {
           endpoint {
-            url = "http://loki-gateway.monitoring-ns.svc.cluster.local/loki/api/v1/push"
+            url = "http://loki.monitoring-ns.svc.cluster.local:3100/loki/api/v1/push"
           }
         }
 
   serviceMonitor:
-    enabled: true
-    additionalLabels:
-      release: amumal-monitoring
+    enabled: false

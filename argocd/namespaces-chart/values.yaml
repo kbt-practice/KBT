@@ -36,3 +36,14 @@ namespaces:
     limitRange:
       defaultRequest: { cpu: 50m, memory: 64Mi }
       default:        { cpu: 200m, memory: 128Mi }
+
+  - name: monitoring-ns
+    quota:
+      pods: "30"
+      requests.cpu: "6"
+      requests.memory: 12Gi
+      limits.cpu: "20"
+      limits.memory: 24Gi
+    limitRange:
+      defaultRequest: { cpu: 50m, memory: 64Mi }
+      default:        { cpu: 1000m, memory: 1Gi }

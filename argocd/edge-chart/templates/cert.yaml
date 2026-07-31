@@ -12,3 +12,4 @@ spec:
     - api.{{ .Values.domainBase }}
     - portainer.{{ .Values.domainBase }}
     - argocd.{{ .Values.domainBase }}
+    - grafana.{{ .Values.domainBase }}

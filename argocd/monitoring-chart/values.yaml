@@ -1,0 +1,342 @@
+# =====================================================================
+# Local PV와 Grafana Gateway API Route
+# =====================================================================
+storage:
+  className: monitoring-local
+  reclaimPolicy: Retain
+  prometheus:
+    pvName: prometheus-pv
+    size: 20Gi
+    hostPath: /data/monitoring/prometheus
+    nodeName: ip-10-0-1-208
+    selectorLabel: prometheus
+  loki:
+    pvName: loki-pv
+    size: 20Gi
+    hostPath: /data/monitoring/loki
+    nodeName: worker-2
+    selectorLabel: loki
+  grafana:
+    pvName: grafana-pv
+    size: 5Gi
+    hostPath: /data/monitoring/grafana
+    nodeName: ip-10-0-1-208
+    selectorLabel: grafana
+
+grafanaRoute:
+  serviceName: kube-prometheus-stack-grafana
+  servicePort: 80
+  host: grafana.sub.amon.p-e.kr
+  gateway:
+    name: amumal-gateway
+    namespace: edge-ns
+    sectionName: https
+
+# =====================================================================
+# kube-prometheus-stack 87.21.0
+# =====================================================================
+kube-prometheus-stack:
+  fullnameOverride: kube-prometheus-stack
+
+  defaultRules:
+    create: true
+
+  grafana:
+    enabled: true
+    admin:
+      existingSecret: grafana-admin-credentials
+      userKey: admin-user
+      passwordKey: admin-password
+    persistence:
+      enabled: true
+      type: pvc
+      storageClassName: monitoring-local
+      accessModes:
+        - ReadWriteOnce
+      size: 5Gi
+      selectorLabels:
+        monitoring.amon/component: grafana
+      finalizers:
+        - kubernetes.io/pvc-protection
+    grafana.ini:
+      server:
+        domain: grafana.sub.amon.p-e.kr
+        root_url: https://grafana.sub.amon.p-e.kr
+      analytics:
+        reporting_enabled: false
+        check_for_updates: false
+    additionalDataSources:
+      - name: Loki
+        uid: loki
+        type: loki
+        access: proxy
+        url: http://loki-gateway.monitoring-ns.svc.cluster.local
+        editable: false
+        jsonData:
+          timeout: 60
+          maxLines: 1000
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+
+  prometheus:
+    prometheusSpec:
+      replicas: 1
+      retention: 15d
+      retentionSize: 18GB
+      resources:
+        requests:
+          cpu: 500m
+          memory: 1Gi
+        limits:
+          cpu: "2"
+          memory: 3Gi
+      storageSpec:
+        volumeClaimTemplate:
+          spec:
+            storageClassName: monitoring-local
+            accessModes:
+              - ReadWriteOnce
+            resources:
+              requests:
+                storage: 20Gi
+            selector:
+              matchLabels:
+                monitoring.amon/component: prometheus
+
+  alertmanager:
+    alertmanagerSpec:
+      replicas: 1
+      resources:
+        requests:
+          cpu: 50m
+          memory: 128Mi
+        limits:
+          cpu: 300m
+          memory: 256Mi
+
+  prometheusOperator:
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+
+  kube-state-metrics:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 300m
+        memory: 256Mi
+
+  prometheus-node-exporter:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 32Mi
+      limits:
+        cpu: 200m
+        memory: 128Mi
+
+# =====================================================================
+# Loki 7.2.0
+# =====================================================================
+loki:
+  fullnameOverride: loki
+  deploymentMode: SingleBinary
+
+  loki:
+    auth_enabled: false
+    commonConfig:
+      path_prefix: /var/loki
+      replication_factor: 1
+    storage:
+      type: filesystem
+    schemaConfig:
+      configs:
+        - from: "2024-04-01"
+          store: tsdb
+          object_store: filesystem
+          schema: v13
+          index:
+            prefix: index_
+            period: 24h
+    limits_config:
+      retention_period: 168h
+      reject_old_samples: true
+      reject_old_samples_max_age: 168h
+      volume_enabled: true
+    compactor:
+      retention_enabled: true
+      delete_request_store: filesystem
+
+  singleBinary:
+    replicas: 1
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+      limits:
+        cpu: "1"
+        memory: 2Gi
+    persistence:
+      enabled: true
+      enableStatefulSetAutoDeletePVC: false
+      whenDeleted: Retain
+      whenScaled: Retain
+      storageClass: monitoring-local
+      size: 20Gi
+      selector:
+        matchLabels:
+          monitoring.amon/component: loki
+
+  read:
+    replicas: 0
+  write:
+    replicas: 0
+  backend:
+    replicas: 0
+
+  gateway:
+    enabled: true
+    replicas: 1
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 300m
+        memory: 256Mi
+
+  chunksCache:
+    enabled: false
+  resultsCache:
+    enabled: false
+  lokiCanary:
+    enabled: false
+  test:
+    enabled: false
+
+  monitoring:
+    serviceMonitor:
+      enabled: true
+      labels:
+        release: kube-prometheus-stack
+    dashboards:
+      enabled: true
+
+# =====================================================================
+# Grafana Alloy 1.11.0
+# =====================================================================
+alloy:
+  fullnameOverride: alloy
+
+  controller:
+    type: daemonset
+    tolerations:
+      - operator: Exists
+
+  alloy:
+    enableReporting: false
+    mounts:
+      varlog: true
+    extraEnv:
+      - name: NODE_NAME
+        valueFrom:
+          fieldRef:
+            fieldPath: spec.nodeName
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        cpu: 300m
+        memory: 256Mi
+    configMap:
+      content: |-
+        logging {
+          level  = "info"
+          format = "logfmt"
+        }
+
+        discovery.kubernetes "pods" {
+          role = "pod"
+        }
+
+        discovery.relabel "pod_logs" {
+          targets = discovery.kubernetes.pods.targets
+
+          rule {
+            source_labels = ["__meta_kubernetes_pod_node_name"]
+            regex         = sys.env("NODE_NAME")
+            action        = "keep"
+          }
+
+          rule {
+            source_labels = ["__meta_kubernetes_namespace"]
+            target_label  = "namespace"
+          }
+
+          rule {
+            source_labels = ["__meta_kubernetes_pod_name"]
+            target_label  = "pod"
+          }
+
+          rule {
+            source_labels = ["__meta_kubernetes_pod_container_name"]
+            target_label  = "container"
+          }
+
+          rule {
+            source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+            target_label  = "app"
+          }
+
+          rule {
+            source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
+            separator     = "/"
+            target_label  = "__path__"
+            replacement   = "/var/log/pods/*$1/*.log"
+          }
+        }
+
+        local.file_match "pod_logs" {
+          path_targets = discovery.relabel.pod_logs.output
+        }
+
+        loki.source.file "pod_logs" {
+          targets       = local.file_match.pod_logs.targets
+          tail_from_end = true
+          forward_to    = [loki.process.pod_logs.receiver]
+        }
+
+        loki.process "pod_logs" {
+          stage.cri {}
+
+          stage.static_labels {
+            values = {
+              cluster = "amumal",
+            }
+          }
+
+          forward_to = [loki.write.default.receiver]
+        }
+
+        loki.write "default" {
+          endpoint {
+            url = "http://loki-gateway.monitoring-ns.svc.cluster.local/loki/api/v1/push"
+          }
+        }
+
+  serviceMonitor:
+    enabled: true
+    additionalLabels:
+      release: kube-prometheus-stack

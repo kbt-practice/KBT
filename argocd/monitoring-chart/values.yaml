@@ -229,7 +229,7 @@ loki:
     serviceMonitor:
       enabled: true
       labels:
-        release: kube-prometheus-stack
+        release: amumal-monitoring
     dashboards:
       enabled: true
 
@@ -339,4 +339,4 @@ alloy:
   serviceMonitor:
     enabled: true
     additionalLabels:
-      release: kube-prometheus-stack
+      release: amumal-monitoring

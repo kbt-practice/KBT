@@ -12,7 +12,7 @@ labels:
 
 image:
   repository: mingkiboo/amumal-amon
-  tag: 877a171c267a7e71ac974d1775409bea1c80a20b
+  tag: f0f11077d36cb057c2e695c15b6ddc8a547e63a8
   pullPolicy: IfNotPresent
 
 # 이미 backend-ns에 만들어둔 secret 참조

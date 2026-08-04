@@ -24,6 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -113,9 +114,10 @@ public class PostService {
                 .findByPostIdAndDeletedAtIsNullOrderByCreatedAtAsc(post.getPostId());
 
         // 게시글 작성자 + 댓글 작성자 ID를 한 번에 모아 DTO Projection으로 조회 (N+1 방지)
+        // 탈퇴한 유저의 댓글은 userId가 null(익명화)이라 필터링한다
         List<Integer> userIds = new ArrayList<>();
         userIds.add(post.getUserId());
-        comments.stream().map(Comment::getUserId).distinct().forEach(userIds::add);
+        comments.stream().map(Comment::getUserId).filter(Objects::nonNull).distinct().forEach(userIds::add);
 
         Map<Integer, UserProjection> userMap = userRepository.findProjectionsByIdIn(userIds).stream()
                 .collect(Collectors.toMap(UserProjection::id, u -> u));

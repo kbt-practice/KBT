@@ -28,11 +28,11 @@ namespaces:
 
   - name: portainer-ns
     quota:
-      pods: "2"
-      requests.cpu: "100m"
-      requests.memory: 128Mi
-      limits.cpu: "400m"
-      limits.memory: 256Mi
+      pods: "3"                 # portainer-statefulset 1 + provisioner 1 + 롤링업데이트 surge 1
+      requests.cpu: "150m"
+      requests.memory: 192Mi
+      limits.cpu: "500m"
+      limits.memory: 400Mi
     limitRange:
       defaultRequest: { cpu: 50m, memory: 64Mi }
       default:        { cpu: 200m, memory: 128Mi }

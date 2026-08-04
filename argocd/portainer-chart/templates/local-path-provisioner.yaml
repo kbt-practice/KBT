@@ -97,6 +97,8 @@ spec:
             - start
             - --config
             - /etc/config/config.json
+            - --helper-pod-file
+            - /etc/config/helperPod.yaml
           env:
             - name: POD_NAMESPACE
               valueFrom:

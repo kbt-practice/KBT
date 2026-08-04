@@ -66,6 +66,7 @@ data:
     metadata:
       name: helper-pod
     spec:
+      serviceAccountName: {{ .Values.localPathProvisioner.name }}
       containers:
         - name: helper-pod
           image: {{ .Values.localPathProvisioner.helperImage }}

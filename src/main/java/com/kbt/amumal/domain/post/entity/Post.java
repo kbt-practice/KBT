@@ -32,7 +32,7 @@ public class Post extends BaseEntity {
     private int userId;
 
     @Builder.Default
-    @Column(nullable = false, columnDefinition = "INT DEFAULT 0")
+    @Column(nullable = false)
     private int viewCount = 0;
 
     public void updateTitle(String title) {

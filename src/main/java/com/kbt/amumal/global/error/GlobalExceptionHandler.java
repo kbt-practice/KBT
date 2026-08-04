@@ -3,6 +3,7 @@ package com.kbt.amumal.global.error;
 import com.kbt.amumal.global.common.ApiResponse;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindException;
@@ -13,12 +14,14 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
     // 일반적인 예외
     @ExceptionHandler(CustomException.class)
     public ResponseEntity<ApiResponse<?>> handleCustomException(CustomException e) {
         ErrorCode errorCode = e.getErrorCode();
+        log.warn("[{}] {}", errorCode, e.getReason());
         return ResponseEntity
                 .status(errorCode.getStatus())
                 .body(ApiResponse.fail(errorCode.getMessage(), Map.of("error", e.getReason())));
@@ -30,6 +33,7 @@ public class GlobalExceptionHandler {
         ErrorCode errorCode = "Authorization".equals(e.getHeaderName())
                 ? ErrorCode.TOKEN_MISSING
                 : ErrorCode.MISSING_HEADER;
+        log.warn("[{}] {}", errorCode, e.getMessage());
         return ResponseEntity
                 .status(errorCode.getStatus())
                 .body(ApiResponse.fail(errorCode.getMessage(), Map.of("error", errorCode.getReason())));
@@ -38,6 +42,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiResponse<?>> handleHttpMessageNotReadableException(HttpMessageNotReadableException e) {
         ErrorCode errorCode = ErrorCode.INVALID_REQUEST_BODY;
+        log.warn("[{}] {}", errorCode, e.getMessage());
         return ResponseEntity
                 .status(errorCode.getStatus())
                 .body(ApiResponse.fail(errorCode.getMessage(), Map.of("error", errorCode.getReason())));
@@ -47,6 +52,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ExpiredJwtException.class)
     public ResponseEntity<ApiResponse<?>> handleExpiredJwtException(ExpiredJwtException e) {
         ErrorCode errorCode = ErrorCode.TOKEN_EXPIRED;
+        log.warn("[{}] {}", errorCode, e.getMessage());
         return ResponseEntity
                 .status(errorCode.getStatus())
                 .body(ApiResponse.fail(errorCode.getMessage(), Map.of("error", errorCode.getReason())));
@@ -56,6 +62,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(JwtException.class)
     public ResponseEntity<ApiResponse<?>> handleJwtException(JwtException e) {
         ErrorCode errorCode = ErrorCode.TOKEN_INVALID;
+        log.warn("[{}] {}", errorCode, e.getMessage());
         return ResponseEntity
                 .status(errorCode.getStatus())
                 .body(ApiResponse.fail(errorCode.getMessage(), Map.of("error", errorCode.getReason())));
@@ -67,6 +74,7 @@ public class GlobalExceptionHandler {
         Map<String, String> errors = new HashMap<>();
         e.getBindingResult().getFieldErrors()
                 .forEach(error -> errors.put(error.getField(), error.getDefaultMessage()));
+        log.warn("[BAD_REQUEST] {}", errors);
         return ResponseEntity
                 .status(ErrorCode.BAD_REQUEST.getStatus())
                 .body(ApiResponse.fail(ErrorCode.BAD_REQUEST.getMessage(), errors));
@@ -75,6 +83,7 @@ public class GlobalExceptionHandler {
     // 500 서버 에러 처리
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<?>> handleException(Exception e) {
+        log.error("[INTERNAL_SERVER_ERROR] {}", e.getMessage(), e);
         return ResponseEntity
                 .status(ErrorCode.INTERNAL_SERVER_ERROR.getStatus())
                 .body(ApiResponse.fail(ErrorCode.INTERNAL_SERVER_ERROR.getMessage(), Map.of("error", ErrorCode.INTERNAL_SERVER_ERROR.getReason())));

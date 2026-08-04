@@ -1,0 +1,23 @@
+# =====================================================================
+# edge (진입점) values
+#  - 엔진(cert-manager, envoy-gateway)은 외부 helm. 여기는 CR만.
+# =====================================================================
+domainBase: sub.amon.p-e.kr
+
+gatewayClassName: eg
+gatewayName: amumal-gateway
+
+envoyProxy:
+  name: eg-proxy-config
+  namespace: envoy-gateway-system
+  replicas: 2
+  nodePort:
+    http: 30100
+    https: 30443
+
+tls:
+  secretName: amumal-tls-secret
+
+certManager:
+  email: amber_lucy@naver.com
+  issuerName: letsencrypt-prod

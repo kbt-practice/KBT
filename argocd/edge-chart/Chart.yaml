@@ -1,0 +1,6 @@
+apiVersion: v2
+name: amumal-edge
+description: amumal 진입점 - Gateway CR + cert-manager CR + https redirect
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

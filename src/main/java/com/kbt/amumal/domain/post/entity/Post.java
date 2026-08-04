@@ -32,8 +32,16 @@ public class Post extends BaseEntity {
     private int userId;
 
     @Builder.Default
-    @Column(nullable = false, columnDefinition = "INT DEFAULT 0")
+    @Column(nullable = false)
     private int viewCount = 0;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private int likeCount = 0;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private int commentCount = 0;
 
     public void updateTitle(String title) {
         this.title = title;

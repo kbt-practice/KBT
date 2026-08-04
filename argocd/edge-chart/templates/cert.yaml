@@ -1,0 +1,15 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: amumal-tls
+  namespace: {{ .Release.Namespace }}
+spec:
+  secretName: {{ .Values.tls.secretName }}
+  issuerRef:
+    name: {{ .Values.certManager.issuerName }}
+    kind: ClusterIssuer
+  dnsNames:
+    - api.{{ .Values.domainBase }}
+    - portainer.{{ .Values.domainBase }}
+    - argocd.{{ .Values.domainBase }}
+    - grafana.{{ .Values.domainBase }}

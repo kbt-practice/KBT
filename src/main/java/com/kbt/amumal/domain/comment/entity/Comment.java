@@ -18,8 +18,8 @@ public class Comment extends BaseEntity {
     @Column(nullable = false)
     private String content;
 
-    @Column(nullable = false)
-    private int userId;
+    // 작성자가 탈퇴(하드 딜리트)하면 null로 익명화되고 댓글 내용은 그대로 남는다
+    private Integer userId;
 
     @Column(nullable = false)
     private int postId;

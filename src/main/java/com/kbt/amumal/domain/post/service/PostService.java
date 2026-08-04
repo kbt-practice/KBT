@@ -2,7 +2,6 @@ package com.kbt.amumal.domain.post.service;
 
 import com.kbt.amumal.domain.comment.entity.Comment;
 import com.kbt.amumal.domain.comment.repository.commentRepository;
-import com.kbt.amumal.domain.post.dto.CountProjection;
 import com.kbt.amumal.domain.post.dto.PostReqDTO;
 import com.kbt.amumal.domain.post.dto.PostResDTO;
 import com.kbt.amumal.domain.post.entity.Like;
@@ -25,6 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -107,15 +107,17 @@ public class PostService {
         postRepository.incrementViewCount(postId); // clearAutomatically = true → L1 캐시 초기화
         post = postRepository.findById(postId).orElseThrow(); // 증가된 viewCount 반영
 
-        long likeCount = likeRepository.countByPostId(post.getPostId());
+        // 좋아요 수 비정규화: Like 테이블 COUNT 대신 Post에 저장된 값을 그대로 사용
+        long likeCount = post.getLikeCount();
 
         List<Comment> comments = commentRepository
                 .findByPostIdAndDeletedAtIsNullOrderByCreatedAtAsc(post.getPostId());
 
         // 게시글 작성자 + 댓글 작성자 ID를 한 번에 모아 DTO Projection으로 조회 (N+1 방지)
+        // 탈퇴한 유저의 댓글은 userId가 null(익명화)이라 필터링한다
         List<Integer> userIds = new ArrayList<>();
         userIds.add(post.getUserId());
-        comments.stream().map(Comment::getUserId).distinct().forEach(userIds::add);
+        comments.stream().map(Comment::getUserId).filter(Objects::nonNull).distinct().forEach(userIds::add);
 
         Map<Integer, UserProjection> userMap = userRepository.findProjectionsByIdIn(userIds).stream()
                 .collect(Collectors.toMap(UserProjection::id, u -> u));
@@ -162,16 +164,11 @@ public class PostService {
         Map<Integer, UserProjection> authorMap = userRepository.findProjectionsByIdIn(authorIds).stream()
                 .collect(Collectors.toMap(UserProjection::id, u -> u));
 
-        // 카운트 DTO Projection으로 한 번에 조회
-        Map<Integer, Long> likeCounts = likeRepository.countsByPostIds(postIds).stream()
-                .collect(Collectors.toMap(CountProjection::postId, CountProjection::count));
-        Map<Integer, Long> commentCounts = commentRepository.countsByPostIds(postIds).stream()
-                .collect(Collectors.toMap(CountProjection::postId, CountProjection::count));
-
         List<PostResDTO.postListItem> items = posts.stream().map(post -> {
             UserProjection user = authorMap.get(post.getUserId());
-            long likeCount = likeCounts.getOrDefault(post.getPostId(), 0L);
-            long commentCount = commentCounts.getOrDefault(post.getPostId(), 0L);
+            // 좋아요·댓글 수 비정규화: Like/Comment 테이블 COUNT 대신 Post에 저장된 값을 그대로 사용
+            long likeCount = post.getLikeCount();
+            long commentCount = post.getCommentCount();
 
             return new PostResDTO.postListItem(
                     post.getPostId(),
@@ -201,9 +198,11 @@ public class PostService {
         String type;
         if (likeRepository.existsByUserIdAndPostId(id, postId)) {
             likeRepository.deleteByUserIdAndPostId(id, postId);
+            postRepository.decrementLikeCount(postId);
             type = "DELETE";
         } else {
             likeRepository.save(Like.builder().userId(id).postId(postId).build());
+            postRepository.incrementLikeCount(postId);
             type = "CREATE";
         }
 

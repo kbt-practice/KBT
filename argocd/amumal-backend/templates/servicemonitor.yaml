@@ -1,0 +1,20 @@
+{{- if .Values.monitoring.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ .Values.serviceName }}
+  labels:
+    release: amumal-monitoring
+spec:
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace }}
+  selector:
+    matchLabels:
+      {{- toYaml .Values.labels | nindent 6 }}
+  endpoints:
+    - port: http
+      path: {{ .Values.monitoring.path }}
+      interval: {{ .Values.monitoring.interval }}
+      scrapeTimeout: {{ .Values.monitoring.scrapeTimeout }}
+{{- end }}

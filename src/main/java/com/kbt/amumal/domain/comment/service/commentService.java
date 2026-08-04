@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Objects;
+
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -31,6 +33,7 @@ public class commentService {
                 .userId(id)
                 .postId(postId)
                 .build());
+        postRepository.incrementCommentCount(postId);
 
         return newComment.getCommentId();
     }
@@ -43,7 +46,7 @@ public class commentService {
         if (comment.getDeletedAt() != null)
             throw new CustomException(ErrorCode.NOT_FOUND, "이미 삭제된 댓글입니다.");
 
-        if (comment.getUserId() != id)
+        if (!Objects.equals(comment.getUserId(), id))
             throw new CustomException(ErrorCode.FORBIDDEN, "유저 정보를 확인해주세요.");
 
         comment.updateComment(request.content());
@@ -57,9 +60,10 @@ public class commentService {
         if (comment.getDeletedAt() != null)
             throw new CustomException(ErrorCode.NOT_FOUND, "이미 삭제된 댓글입니다.");
 
-        if (comment.getUserId() != id)
+        if (!Objects.equals(comment.getUserId(), id))
             throw new CustomException(ErrorCode.FORBIDDEN, "유저 정보를 확인해주세요.");
 
         comment.softDelete();
+        postRepository.decrementCommentCount(comment.getPostId());
     }
 }

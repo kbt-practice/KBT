@@ -85,9 +85,10 @@ public class RetentionScheduler {
 
     /**
      * 유저 1명을 다음 순서로 완전 삭제한다.
-     *   1. 유저의 모든 게시글에 달린 댓글·좋아요 삭제
+     *   1. 유저의 모든 게시글에 달린 댓글·좋아요 삭제 (게시글 자체가 없어지므로 함께 삭제)
      *   2. 유저의 게시글 이미지 파일 삭제 후 게시글 row 삭제
-     *   3. 다른 게시글에 남긴 댓글·좋아요 삭제
+     *   3. 다른 게시글에 남긴 댓글·좋아요는 삭제하지 않고 작성자만 익명화(userId=null)
+     *      → 다른 유저의 게시글 콘텐츠·좋아요/댓글 수는 그대로 유지된다
      *   4. 프로필 이미지 파일 삭제
      *   5. 유저 row 삭제
      *
@@ -105,9 +106,9 @@ public class RetentionScheduler {
         }
         postRepository.deleteAll(userPosts);
 
-        // 다른 게시글에 남긴 댓글, 좋아요 삭제
-        commentRepository.deleteByUserId(user.getId());
-        likeRepository.deleteByUserId(user.getId());
+        // 다른 게시글에 남긴 댓글, 좋아요는 익명화만 (likeCount/commentCount 동기화 불필요)
+        commentRepository.anonymizeByUserId(user.getId());
+        likeRepository.anonymizeByUserId(user.getId());
 
         imageHandler.deleteSafely(user.getProfileImageUrl());
         userRepository.delete(user);

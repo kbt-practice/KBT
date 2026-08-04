@@ -1,0 +1,17 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: amumal-portainer
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/kbt-practice/KBT.git
+    targetRevision: main
+    path: portainer-chart
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: portainer-ns
+  syncPolicy:
+    syncOptions: [ "CreateNamespace=false" ]
+    automated: { prune: false, selfHeal: false }

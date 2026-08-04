@@ -1,0 +1,6 @@
+apiVersion: v2
+name: amumal-portainer
+description: amumal portainer (management UI) - workload + route + IP allowlist
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

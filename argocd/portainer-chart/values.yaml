@@ -39,14 +39,35 @@ probes:
   port: 9000
   path: /
 
-# local PV (단일 노드 방식, EBS CSI 이전 예정)
+# Local Path Provisioner
+localPathProvisioner:
+  enabled: true
+  name: portainer-local-path-provisioner
+  image:
+    repository: rancher/local-path-provisioner
+    tag: v0.0.31
+    pullPolicy: IfNotPresent
+  helperImage: busybox:1.36.1
+  storageClass:
+    name: portainer-local-path
+    isDefaultClass: false
+    reclaimPolicy: Retain
+    volumeBindingMode: WaitForFirstConsumer
+  nodePath: /data/local-path-provisioner
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
+
+# Portainer 데이터 PVC (Local Path Provisioner가 PV를 동적으로 생성)
 persistence:
-  storageClassName: portainer-local
-  pvName: portainer-pv
-  claimName: portainer-data
+  storageClassName: portainer-local-path
+  # 기존 정적 PVC와의 immutable 필드 충돌을 피하기 위해 새 이름을 사용한다.
+  claimName: portainer-data-local-path
   size: 1Gi
-  hostPath: /data/portainer
-  nodeName: worker-2
 
 # Gateway 연동 (route)
 gateway:

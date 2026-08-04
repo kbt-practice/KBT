@@ -2,36 +2,6 @@ apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
   name: {{ .Values.storage.className }}
-provisioner: kubernetes.io/no-provisioner
+provisioner: rancher.io/local-path
 volumeBindingMode: WaitForFirstConsumer
 reclaimPolicy: {{ .Values.storage.reclaimPolicy }}
----
-{{- range $name, $volume := dict "prometheus" .Values.storage.prometheus "loki" .Values.storage.loki "grafana" .Values.storage.grafana }}
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: {{ $volume.pvName }}
-  labels:
-    monitoring.amon/component: {{ $volume.selectorLabel }}
-  annotations:
-    argocd.argoproj.io/sync-options: Delete=false
-spec:
-  capacity:
-    storage: {{ $volume.size }}
-  volumeMode: Filesystem
-  accessModes:
-    - ReadWriteOnce
-  persistentVolumeReclaimPolicy: {{ $.Values.storage.reclaimPolicy }}
-  storageClassName: {{ $.Values.storage.className }}
-  local:
-    path: {{ $volume.hostPath }}
-  nodeAffinity:
-    required:
-      nodeSelectorTerms:
-        - matchExpressions:
-            - key: kubernetes.io/hostname
-              operator: In
-              values:
-                - {{ $volume.nodeName }}
----
-{{- end }}

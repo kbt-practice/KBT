@@ -1,7 +1,11 @@
+{{- if .Values.localPathProvisioner.enabled }}
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
-  name: {{ .Values.persistence.storageClassName }}
-provisioner: kubernetes.io/no-provisioner
-volumeBindingMode: WaitForFirstConsumer
-reclaimPolicy: Retain
+  name: {{ .Values.localPathProvisioner.storageClass.name }}
+  annotations:
+    storageclass.kubernetes.io/is-default-class: {{ .Values.localPathProvisioner.storageClass.isDefaultClass | quote }}
+provisioner: rancher.io/local-path
+volumeBindingMode: {{ .Values.localPathProvisioner.storageClass.volumeBindingMode }}
+reclaimPolicy: {{ .Values.localPathProvisioner.storageClass.reclaimPolicy }}
+{{- end }}

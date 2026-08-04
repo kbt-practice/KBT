@@ -1,27 +1,9 @@
 # =====================================================================
-# Local PV와 Grafana Gateway API Route
+# Local Path Provisioner와 Grafana Gateway API Route
 # =====================================================================
 storage:
-  className: monitoring-local
+  className: monitoring-local-path
   reclaimPolicy: Retain
-  prometheus:
-    pvName: prometheus-pv
-    size: 20Gi
-    hostPath: /data/monitoring/prometheus
-    nodeName: ip-10-0-1-208
-    selectorLabel: prometheus
-  loki:
-    pvName: loki-pv
-    size: 20Gi
-    hostPath: /data/monitoring/loki
-    nodeName: worker-2
-    selectorLabel: loki
-  grafana:
-    pvName: grafana-pv
-    size: 5Gi
-    hostPath: /data/monitoring/grafana
-    nodeName: ip-10-0-1-208
-    selectorLabel: grafana
 
 grafanaRoute:
   serviceName: amumal-monitoring-grafana
@@ -73,12 +55,10 @@ kube-prometheus-stack:
     persistence:
       enabled: true
       type: pvc
-      storageClassName: monitoring-local
+      storageClassName: monitoring-local-path
       accessModes:
         - ReadWriteOnce
       size: 5Gi
-      selectorLabels:
-        monitoring.amon/component: grafana
       finalizers:
         - kubernetes.io/pvc-protection
     grafana.ini:
@@ -123,15 +103,12 @@ kube-prometheus-stack:
       storageSpec:
         volumeClaimTemplate:
           spec:
-            storageClassName: monitoring-local
+            storageClassName: monitoring-local-path
             accessModes:
               - ReadWriteOnce
             resources:
               requests:
                 storage: 20Gi
-            selector:
-              matchLabels:
-                monitoring.amon/component: prometheus
 
   alertmanager:
     enabled: false
@@ -209,11 +186,8 @@ loki:
       enableStatefulSetAutoDeletePVC: false
       whenDeleted: Retain
       whenScaled: Retain
-      storageClass: monitoring-local
+      storageClass: monitoring-local-path
       size: 20Gi
-      selector:
-        matchLabels:
-          monitoring.amon/component: loki
 
   read:
     replicas: 0

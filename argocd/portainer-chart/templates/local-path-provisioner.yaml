@@ -1,0 +1,114 @@
+{{- if .Values.localPathProvisioner.enabled }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ .Values.localPathProvisioner.name }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ .Values.localPathProvisioner.name }}
+rules:
+  - apiGroups: [""]
+    resources: ["nodes", "persistentvolumeclaims", "configmaps"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["endpoints", "persistentvolumes", "pods"]
+    verbs: ["*"]
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create", "patch"]
+  - apiGroups: ["storage.k8s.io"]
+    resources: ["storageclasses"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["get", "create", "update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ .Values.localPathProvisioner.name }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ .Values.localPathProvisioner.name }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ .Values.localPathProvisioner.name }}
+    namespace: {{ .Release.Namespace }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.localPathProvisioner.name }}
+data:
+  config.json: |-
+    {
+      "nodePathMap": [
+        {
+          "node": "DEFAULT_PATH_FOR_NON_LISTED_NODES",
+          "paths": [{{ .Values.localPathProvisioner.nodePath | quote }}]
+        }
+      ]
+    }
+  setup: |-
+    #!/bin/sh
+    set -eu
+    mkdir -m 0777 -p "$VOL_DIR"
+  teardown: |-
+    #!/bin/sh
+    set -eu
+    rm -rf "$VOL_DIR"
+  helperPod.yaml: |-
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: helper-pod
+    spec:
+      containers:
+        - name: helper-pod
+          image: {{ .Values.localPathProvisioner.helperImage }}
+          imagePullPolicy: IfNotPresent
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.localPathProvisioner.name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .Values.localPathProvisioner.name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ .Values.localPathProvisioner.name }}
+      annotations:
+        checksum/config: {{ .Values.localPathProvisioner | toJson | sha256sum }}
+    spec:
+      serviceAccountName: {{ .Values.localPathProvisioner.name }}
+      containers:
+        - name: local-path-provisioner
+          image: "{{ .Values.localPathProvisioner.image.repository }}:{{ .Values.localPathProvisioner.image.tag }}"
+          imagePullPolicy: {{ .Values.localPathProvisioner.image.pullPolicy }}
+          command:
+            - local-path-provisioner
+            - start
+            - --config
+            - /etc/config/config.json
+          env:
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/config/
+          resources:
+            {{- toYaml .Values.localPathProvisioner.resources | nindent 12 }}
+      volumes:
+        - name: config-volume
+          configMap:
+            name: {{ .Values.localPathProvisioner.name }}
+{{- end }}

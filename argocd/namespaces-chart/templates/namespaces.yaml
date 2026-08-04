@@ -1,0 +1,39 @@
+{{- range .Values.namespaces }}
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .name }}
+  labels:
+    name: {{ .name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"   # ns를 quota보다 먼저
+---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: {{ .name }}-limits
+  namespace: {{ .name }}
+spec:
+  limits:
+    - type: Container
+      defaultRequest:
+        cpu: {{ .limitRange.defaultRequest.cpu }}
+        memory: {{ .limitRange.defaultRequest.memory }}
+      default:
+        cpu: {{ .limitRange.default.cpu }}
+        memory: {{ .limitRange.default.memory }}
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: {{ .name | replace "-ns" "" }}-quota
+  namespace: {{ .name }}
+spec:
+  hard:
+    pods: {{ .quota.pods | quote }}
+    requests.cpu: {{ index .quota "requests.cpu" | quote }}
+    requests.memory: {{ index .quota "requests.memory" | quote }}
+    limits.cpu: {{ index .quota "limits.cpu" | quote }}
+    limits.memory: {{ index .quota "limits.memory" | quote }}
+---
+{{- end }}

@@ -100,6 +100,8 @@ spec:
             - /etc/config/config.json
             - --helper-pod-file
             - /etc/config/helperPod.yaml
+            - --service-account-name
+            - {{ .Values.localPathProvisioner.name }}
           env:
             - name: POD_NAMESPACE
               valueFrom:

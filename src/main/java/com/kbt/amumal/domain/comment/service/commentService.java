@@ -31,6 +31,7 @@ public class commentService {
                 .userId(id)
                 .postId(postId)
                 .build());
+        postRepository.incrementCommentCount(postId);
 
         return newComment.getCommentId();
     }
@@ -61,5 +62,6 @@ public class commentService {
             throw new CustomException(ErrorCode.FORBIDDEN, "유저 정보를 확인해주세요.");
 
         comment.softDelete();
+        postRepository.decrementCommentCount(comment.getPostId());
     }
 }

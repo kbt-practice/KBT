@@ -48,3 +48,4 @@ jobs:
             문제가 없으면 그렇다고 짧게 알려줘.
           use_sticky_comment: 'true'
           include_fix_links: 'true'
+          show_full_output: 'true'

@@ -1,6 +1,6 @@
 # KBT 코드 스타일 가이드
 
-이 문서는 `amumal` 프로젝트(Spring Boot / Java 21)의 기존 코드에서 관찰된 컨벤션을 정리한 것입니다.
+이 문서는 `amumal` 프로젝트의 컨벤션을 정리한 것입니다.
 새 코드를 작성하거나 리뷰할 때 이 문서를 기준으로 판단합니다.
 
 ## 1. 패키지 구조
@@ -71,10 +71,17 @@ global/
 ### Controller
 - `@RestController` + `@RequiredArgsConstructor` + `@RequestMapping("/{리소스}")`.
 - 반환형은 `ApiResponse<?>`로 통일합니다.
-- Swagger 문서화: 클래스에 `@Tag`, 메서드에 `@Operation`, 경로 변수에 `@Parameter` — `description`은 한국어로 작성합니다. 인증이 필요 없는 엔드포인트에는 `@SecurityRequirements`를 붙입니다.
 - 인증된 사용자 ID는 커스텀 어노테이션 `@LoginUserId int userId`로 받습니다.
 - 요청 검증이 필요한 DTO 파라미터에는 `@Valid`를 붙입니다.
 - 컨트롤러에는 비즈니스 로직을 두지 않고 Service 호출 결과를 `ApiResponse`로 감싸는 역할만 합니다.
+
+### Swagger 문서화
+- 클래스에 `@Tag(name = "{한글 도메인명}", description = "{그 도메인 API가 제공하는 기능 요약}")`을 붙입니다. (예: `@Tag(name = "게시글", description = "게시글 CRUD·좋아요 API")`)
+- 각 메서드에는 `@Operation(summary = "{짧은 동작명}", description = "{동작 방식·부수효과·제약조건}")`을 붙입니다. `summary`는 "게시글 등록"처럼 명사형으로, `description`은 "제목·내용·이미지(선택)로 게시글을 생성합니다."처럼 실제 동작을 한 문장으로 설명합니다.
+- 경로 변수·쿼리 파라미터 중 이름만으로 역할이 분명하지 않은 것에는 `@Parameter(description = "...")`를 붙입니다. (예: `@Parameter(description = "수정할 게시글 ID") @PathVariable Integer postId`)
+- 인증이 필요 없는 엔드포인트(목록/상세 조회 등)에는 `@SecurityRequirements`를 붙여 Swagger UI에서 인증 입력란이 뜨지 않게 합니다.
+- `@LoginUserId`처럼 Swagger 문서에 노출되면 안 되는 파라미터 애너테이션은 `SwaggerConfig`의 `SpringDocUtils.getConfig().addAnnotationsToIgnore(...)`에 등록해서 문서에서 숨깁니다.
+- `@Tag`/`@Operation`/`@Parameter`의 모든 설명 문구는 한국어로 작성합니다.
 
 ### Service
 - `@Service` + `@Transactional`(클래스 레벨, 메서드 단위로 세분화하지 않음) + `@RequiredArgsConstructor`.
@@ -91,7 +98,7 @@ global/
 - 여러 줄에 걸친 판단이 필요한 쿼리 메서드에는 Javadoc(`/** ... */`)으로 파라미터와 동작을 설명합니다.
 
 ### Entity
-- `BaseEntity`(생성/수정/삭제 시각)를 상속합니다.
+- `BaseEntity`(생성/수정/삭제 시각)를 상속합니다. (단, Like 스키마 제외)
 - 소프트 삭제는 `deletedAt` 필드 + `softDelete()` 메서드로 처리합니다.
 - 상태 변경은 setter가 아닌 의도가 드러나는 메서드로 노출합니다.
 - 비정규화된 카운트 필드(`likeCount`, `commentCount`, `viewCount`)를 두는 경우, 원자적 갱신은 Repository의 `@Modifying` 쿼리로 처리하고 그 이유를 주석으로 남깁니다.
@@ -110,19 +117,29 @@ global/
 
 ## 7. 주석
 
-- 주석은 "왜"를 설명할 때만 남깁니다 — 코드가 하는 일이 아니라, 그렇게 해야 하는 이유(트레이드오프, 비정규화 이유, 특정 버그 우회 등).
+- 주석은 코드를 더 빠르게 이해하는 데 실제로 도움이 될 때만 남깁니다.
+- 트레이드오프, 비정규화 이유, 특정 버그 우회처럼 "왜 이렇게 했는지"를 설명하는 주석을 가장 우선합니다.
+- 메서드나 블록 단위로 흐름을 짚어주는 간결한 설명 주석(`// 댓글 생성`, `// 헤더 로드`처럼 한 줄로 그 구간이 뭘 하는지 요약하는 주석)도 허용합니다. 단, 코드를 그대로 번역하듯 줄마다 달거나 문단 단위로 길어지지 않게 합니다.
+- 메서드/변수 이름만으로 이미 충분히 설명되는 경우에는 같은 내용을 반복하는 주석을 덧붙이지 않습니다.
 - 모든 주석/Swagger 설명/에러 메시지는 한국어로 작성합니다.
-- 자명한 코드에는 주석을 달지 않습니다.
 
 ## 8. 테스트
 
 - 단위 테스트: JUnit 5 + Mockito(`@ExtendWith(MockitoExtension.class)`, `@Mock`, `@InjectMocks`).
 - 테스트 클래스는 `{대상클래스}Test`, 통합 테스트는 `{대상}IntegrationTest`(별도 `integration` 태그로 분리 실행).
 - 각 테스트 메서드에 `@DisplayName`으로 한국어 설명을 답니다.
-- 테스트 본문은 `// given` / `// when` / `// then` 주석으로 3단 구성합니다.
+- 테스트 본문은 `// given`, `// when`, `// then` 주석으로 3단 구성합니다.
 - 검증은 AssertJ(`assertThat`), 스텁은 BDDMockito(`given(...).willReturn(...)`)를 사용합니다.
 
 ## 9. 기타 규칙
 
 - ID 타입: 엔티티/DTO의 식별자 필드와 `@PathVariable`은 `Integer`(nullable 허용, JPA 매핑 편의), 서비스/컨트롤러 메서드 파라미터로 로그인 사용자 ID를 받을 때는 `int`를 사용하는 기존 패턴을 따릅니다.
 - 매직 리터럴 대신 의미 있는 이름의 `private static final` 상수를 사용합니다(`REFRESH_PREFIX` 등).
+
+## 10. 설계 원칙
+
+- **단일 책임 원칙**: 클래스와 메서드가 여러 책임을 동시에 갖지 않도록 쪼갭니다.
+  - `ImageHandler`는 이미지 확장자/MIME/Magic Bytes 검증과 S3 업로드·삭제만 전담하고, 도메인 서비스 로직과 섞이지 않습니다.
+  - `PostService`/`UserService`처럼 여러 메서드에서 반복되는 하위 로직은 `uploadImageIfPresent`, `registerImageRollbackOnFailure` 같은 이름이 명확한 `private` 메서드로 분리합니다.
+  - 하나의 클래스가 너무 많은 책임을 갖게 되면(예: 검증 + 저장 + 알림을 한 메서드가 전부 처리) 책임 단위로 별도 클래스나 메서드로 나눕니다.
+- **의존성 분리와 주입**: 협력 객체를 직접 `new`로 생성하지 않고, `private final` 필드 + 생성자 주입(`@RequiredArgsConstructor`)으로 받습니다. 구현이 여러 개일 수 있거나 교체 가능성이 있는 경우 구체 클래스보다 인터페이스(예: `PostRepositoryCustom`, `PostRepository extends JpaRepository<...>`)에 의존합니다.

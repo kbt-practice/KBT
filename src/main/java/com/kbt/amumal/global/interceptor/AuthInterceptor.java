@@ -24,7 +24,7 @@ public class AuthInterceptor implements HandlerInterceptor {
         boolean requiresAuth = Arrays.stream(handlerMethod.getMethodParameters())
                 .anyMatch(p -> p.hasParameterAnnotation(LoginUserId.class));
 
-        if (!requiresAuth) return true; //
+        if (!requiresAuth) return true;
 
         String authorization = request.getHeader("Authorization"); // 헤더 로드
         int userId = userIdToken.getIdByToken(authorization); // JWT 파싱

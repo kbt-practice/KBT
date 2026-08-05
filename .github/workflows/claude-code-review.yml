@@ -1,6 +1,7 @@
 name: Claude Code Review
 
 # dev로 향하는 PR(feat/fix 서브 브랜치)에서만 동작한다.
+# (GitHub가 트리거 설정을 재인식하도록 default 브랜치에 직접 재커밋)
 on:
   pull_request:
     branches: [dev]

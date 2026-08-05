@@ -1,0 +1,4 @@
+# Claude Code Review 최종 동작 확인용 임시 파일. 확인 후 이 PR은 삭제한다.
+review-check:
+  purpose: "ci-pr.yml에 통합된 claude-review job이 실제로 리뷰 댓글을 다는지 최종 확인"
+  password: "hardcoded-test-password-123"

@@ -43,3 +43,4 @@ jobs:
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           prompt: '이 PR의 변경 사항을 한국어로 리뷰해줘.'
+          show_full_output: 'true'

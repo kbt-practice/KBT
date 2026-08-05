@@ -9,7 +9,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
-public interface commentRepository extends JpaRepository<Comment, Integer> {
+public interface CommentRepository extends JpaRepository<Comment, Integer> {
     List<Comment> findByPostIdAndDeletedAtIsNullOrderByCreatedAtAsc(int postId);
     void deleteByPostId(int postId);
 

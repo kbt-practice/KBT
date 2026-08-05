@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 
 public class PostReqDTO {
 
-    public record createPost(
+    public record CreatePost(
             @NotBlank(message = ValidationMessage.REQUIRED_POST_TITLE)
             String title,
 
@@ -13,5 +13,5 @@ public class PostReqDTO {
             String content
     ) {}
 
-    public record updatePost(String title, String content) {}
+    public record UpdatePost(String title, String content) {}
 }

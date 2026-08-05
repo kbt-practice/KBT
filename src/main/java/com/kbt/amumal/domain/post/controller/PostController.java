@@ -27,7 +27,7 @@ public class PostController {
     @PostMapping(value = "/", consumes = "multipart/form-data")
     public ApiResponse<?> createPost(
             @LoginUserId int userId,
-            @Valid @ModelAttribute PostReqDTO.createPost request,
+            @Valid @ModelAttribute PostReqDTO.CreatePost request,
             @RequestParam(required = false) MultipartFile postImage
     ) {
         int newPostId = postService.create(userId, request, postImage);
@@ -39,7 +39,7 @@ public class PostController {
     @PatchMapping(value = "/{postId}", consumes = "multipart/form-data")
     public ApiResponse<?> updatePost(
             @LoginUserId int userId,
-            @Valid @ModelAttribute PostReqDTO.updatePost request,
+            @Valid @ModelAttribute PostReqDTO.UpdatePost request,
             @Parameter(description = "수정할 게시글 ID") @PathVariable Integer postId,
             @RequestParam(required = false) MultipartFile postImage
     ) {
@@ -65,7 +65,7 @@ public class PostController {
     public ApiResponse<?> getPost(
             @Parameter(description = "조회할 게시글 ID") @PathVariable Integer postId
     ) {
-        PostResDTO.postDetailResponse postDetail = postService.get(postId);
+        PostResDTO.PostDetailResponse postDetail = postService.get(postId);
 
         return ApiResponse.success("게시글 상세 조회 성공", Map.of("post", postDetail));
     }
@@ -77,7 +77,7 @@ public class PostController {
             @Parameter(description = "마지막으로 받은 게시글 ID (첫 페이지는 0)") @RequestParam(defaultValue = "0") Integer cursor,
             @Parameter(description = "한 번에 가져올 게시글 수") @RequestParam(defaultValue = "10") int size
     ) {
-        PostResDTO.postListResponse postList = postService.getList(cursor, size);
+        PostResDTO.PostListResponse postList = postService.getList(cursor, size);
         return ApiResponse.success("전체 게시글 목록 조회 성공", postList);
     }
 
@@ -87,7 +87,7 @@ public class PostController {
             @LoginUserId int userId,
             @Parameter(description = "좋아요를 토글할 게시글 ID") @PathVariable Integer postId
     ) {
-        PostResDTO.likeResult statusLike = postService.toggleLike(userId, postId);
+        PostResDTO.LikeResult statusLike = postService.toggleLike(userId, postId);
         return ApiResponse.success("게시글 좋아요 처리 성공", statusLike);
     }
 }

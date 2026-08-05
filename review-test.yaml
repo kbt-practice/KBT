@@ -1,0 +1,4 @@
+# Claude Code Review 워크플로우 동작 확인용 임시 파일. 확인 후 이 PR은 삭제한다.
+review-check:
+  purpose: "PR CI 성공 후 Claude Code Review가 정상적으로 실행되는지 확인"
+  password: "hardcoded-test-password-123"

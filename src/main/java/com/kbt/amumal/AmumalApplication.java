@@ -9,8 +9,8 @@ import java.util.TimeZone;
 @SpringBootApplication
 @EnableJpaAuditing
 public class AmumalApplication {
-	public static void main(String[] args) {
-		TimeZone.setDefault(TimeZone.getTimeZone("Asia/Seoul"));
-		SpringApplication.run(AmumalApplication.class, args);
-	}
+    public static void main(String[] args) {
+        TimeZone.setDefault(TimeZone.getTimeZone("Asia/Seoul"));
+        SpringApplication.run(AmumalApplication.class, args);
+    }
 }

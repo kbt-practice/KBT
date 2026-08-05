@@ -42,4 +42,9 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          prompt: '이 PR의 변경 사항을 한국어로 리뷰해줘.'
+          prompt: |
+            이 PR에서 변경된 코드를 한국어로 리뷰해줘.
+            버그, 보안 문제, 이 저장소의 CLAUDE.md에 정리된 코드 스타일 위반 여부를 중심으로 확인하고,
+            문제가 없으면 그렇다고 짧게 알려줘.
+          use_sticky_comment: 'true'
+          include_fix_links: 'true'

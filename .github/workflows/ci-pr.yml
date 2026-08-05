@@ -32,14 +32,13 @@ jobs:
       contents: read
       pull-requests: write
       issues: write
-      id-token: read
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Claude AI Code Review
-        uses: chimaek/claude-code-review-action@e391f5952a6e49389bca614eded279133dba994f
+        uses: chimaek/claude-code-review-action@master
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}

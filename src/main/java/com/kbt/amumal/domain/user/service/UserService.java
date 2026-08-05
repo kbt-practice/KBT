@@ -48,11 +48,11 @@ public class UserService {
         return newUser.getUserId();
     }
 
-    public UserResDTO.userInfo get(int id) {
+    public UserResDTO.UserInfo get(int id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-        return UserResDTO.userInfo.from(user);
+        return UserResDTO.UserInfo.from(user);
     }
 
     public void withdrawUser(int id) {

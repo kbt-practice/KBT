@@ -1,7 +1,7 @@
 package com.kbt.amumal.domain.post.service;
 
 import com.kbt.amumal.domain.comment.entity.Comment;
-import com.kbt.amumal.domain.comment.repository.commentRepository;
+import com.kbt.amumal.domain.comment.repository.CommentRepository;
 import com.kbt.amumal.domain.post.dto.CountProjection;
 import com.kbt.amumal.domain.post.entity.Like;
 import com.kbt.amumal.domain.post.entity.Post;
@@ -56,7 +56,7 @@ class PostLikeCountBenchmarkTest {
     private LikeRepository likeRepository;
 
     @Autowired
-    private commentRepository commentRepository;
+    private CommentRepository commentRepository;
 
     private List<Post> posts; // getList()에서 이미 로딩된 상태를 흉내내기 위해 보관 (비정규화 방식이 재조회하지 않도록)
     private List<Integer> postIds;

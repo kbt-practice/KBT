@@ -5,6 +5,7 @@ import com.kbt.amumal.domain.comment.entity.Comment;
 import com.kbt.amumal.domain.comment.repository.commentRepository;
 import com.kbt.amumal.domain.post.entity.Post;
 import com.kbt.amumal.domain.post.repository.PostRepository;
+import com.kbt.amumal.domain.search.service.SearchDirtyService;
 import com.kbt.amumal.global.error.CustomException;
 import com.kbt.amumal.global.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,7 @@ import java.util.Objects;
 public class commentService {
     private final commentRepository commentRepository;
     private final PostRepository postRepository;
+    private final SearchDirtyService searchDirtyService;
 
     // 댓글 생성
     public int create(int id, Integer postId, CommentReqDTO.createComment request) {
@@ -34,6 +36,7 @@ public class commentService {
                 .postId(postId)
                 .build());
         postRepository.incrementCommentCount(postId);
+        searchDirtyService.markDirty(postId);
 
         return newComment.getCommentId();
     }
@@ -50,6 +53,7 @@ public class commentService {
             throw new CustomException(ErrorCode.FORBIDDEN, "유저 정보를 확인해주세요.");
 
         comment.updateComment(request.content());
+        searchDirtyService.markDirty(comment.getPostId());
     }
 
     // 댓글 삭제
@@ -65,5 +69,6 @@ public class commentService {
 
         comment.softDelete();
         postRepository.decrementCommentCount(comment.getPostId());
+        searchDirtyService.markDirty(comment.getPostId());
     }
 }

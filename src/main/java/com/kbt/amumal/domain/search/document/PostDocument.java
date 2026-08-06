@@ -8,13 +8,15 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Mapping;
 import org.springframework.data.elasticsearch.annotations.Setting;
+import org.springframework.data.elasticsearch.annotations.WriteTypeHint;
 
 import java.time.LocalDateTime;
 
 // 제목·내용·댓글 내용을 하나의 문서로 색인한다 (유저 이름 등은 검색 범위에서 제외)
-@Document(indexName = "posts")
-@Setting(settingPath = "elasticsearch/post-settings.json")
-@Mapping(mappingPath = "elasticsearch/post-mappings.json")
+// post-mappings.json이 dynamic: strict라서, Spring이 기본으로 넣는 _class 필드를 꺼야 색인이 거부되지 않는다
+@Document(indexName = "posts-v1", createIndex = false, writeTypeHint = WriteTypeHint.FALSE)
+@Setting(settingPath = "elasticsearch/post-settings.json") // nori 토크나이저·필터 정의 (korean_nori analyzer)
+@Mapping(mappingPath = "elasticsearch/post-mappings.json") // title/content/comments가 korean_nori analyzer를 쓰도록 매핑
 @Getter
 @Builder
 @NoArgsConstructor

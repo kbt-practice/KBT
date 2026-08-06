@@ -8,6 +8,7 @@ import com.kbt.amumal.domain.post.entity.Like;
 import com.kbt.amumal.domain.post.entity.Post;
 import com.kbt.amumal.domain.post.repository.LikeRepository;
 import com.kbt.amumal.domain.post.repository.PostRepository;
+import com.kbt.amumal.domain.search.service.SearchDirtyService;
 import com.kbt.amumal.domain.user.dto.UserProjection;
 import com.kbt.amumal.domain.user.entity.User;
 import com.kbt.amumal.domain.user.repository.UserRepository;
@@ -36,6 +37,7 @@ public class PostService {
     private final commentRepository commentRepository;
     private final UserRepository userRepository;
     private final ImageHandler fileService;
+    private final SearchDirtyService searchDirtyService;
 
     public int create(int id, PostReqDTO.createPost request, MultipartFile postImage) {
         String postImageUrl = uploadImageIfPresent(postImage);
@@ -52,6 +54,8 @@ public class PostService {
                 .postImageOriginalName(originalName)
                 .userId(id)
                 .build());
+
+        searchDirtyService.markDirty(newPost.getPostId());
 
         return newPost.getPostId();
     }
@@ -85,6 +89,8 @@ public class PostService {
 
             post.updatePostImage(newImageUrl, postImage.getOriginalFilename());
         }
+
+        searchDirtyService.markDirty(postId);
     }
 
     public void delete(int id, Integer postId) {
@@ -95,6 +101,7 @@ public class PostService {
             throw new CustomException(ErrorCode.POST_FORBIDDEN_DELETE);
 
         post.softDelete();
+        searchDirtyService.markDirty(postId);
     }
 
     public PostResDTO.postDetailResponse get(Integer postId) {

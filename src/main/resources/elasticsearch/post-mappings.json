@@ -1,9 +1,11 @@
 {
+  "dynamic": "strict",
   "properties": {
+    "id": { "type": "keyword" },
     "postId": { "type": "integer" },
-    "title": { "type": "text", "analyzer": "korean_nori" },
-    "content": { "type": "text", "analyzer": "korean_nori" },
-    "comments": { "type": "text", "analyzer": "korean_nori" },
+    "title": { "type": "text", "analyzer": "korean_nori", "search_analyzer": "korean_nori" },
+    "content": { "type": "text", "analyzer": "korean_nori", "search_analyzer": "korean_nori" },
+    "comments": { "type": "text", "analyzer": "korean_nori", "search_analyzer": "korean_nori" },
     "createdAt": { "type": "date" }
   }
 }

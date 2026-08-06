@@ -1,0 +1,10 @@
+apiVersion: v2
+name: amumal-elasticsearch
+description: Elasticsearch (ECK) for Amumal search
+type: application
+version: 0.1.0
+appVersion: "9.4.2"
+dependencies:
+  - name: eck-elasticsearch
+    version: 0.20.0
+    repository: https://helm.elastic.co

@@ -1,23 +1,25 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: amumal-monitoring
+  name: amumal-elasticsearch
   namespace: argocd
 spec:
   project: default
   source:
     repoURL: https://github.com/kbt-practice/KBT.git
     targetRevision: main
-    path: argocd/monitoring-chart
+    path: argocd/elasticsearch-chart
     helm:
-      releaseName: argocd/amumal-monitoring
+      releaseName: amumal-search
   destination:
     server: https://kubernetes.default.svc
-    namespace: monitoring-ns
+    namespace: es-ns
   syncPolicy:
     syncOptions:
       - CreateNamespace=false
+      - SkipDryRunOnMissingResource=true
       - ServerSideApply=true
     automated:
+      # PVC를 보호하기 위해 Elasticsearch CR은 자동 prune하지 않는다.
       prune: false
-      selfHeal: false
+      selfHeal: true

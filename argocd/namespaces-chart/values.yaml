@@ -6,6 +6,7 @@
 namespaces:
   - name: backend-ns
     quota:
+      # Backend 2개 + rolling surge 1개
       pods: "3"
       requests.cpu: "300m"
       requests.memory: 1536Mi
@@ -15,6 +16,19 @@ namespaces:
       defaultRequest: { cpu: 100m, memory: 512Mi }
       default:        { cpu: 1000m, memory: 1280Mi }
 
+  - name: es-ns
+    quota:
+      # Elasticsearch 1개 + 운영 여유 1개
+      pods: "2"
+      requests.cpu: "500m"
+      requests.memory: 2Gi
+      limits.cpu: "2"
+      limits.memory: 2Gi
+    limitRange:
+      defaultRequest: { cpu: 200m, memory: 512Mi }
+      default:        { cpu: 1000m, memory: 2Gi }
+
+  # Ingress
   - name: edge-ns
     quota:
       pods: "4"

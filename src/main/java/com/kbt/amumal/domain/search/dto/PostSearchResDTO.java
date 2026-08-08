@@ -7,7 +7,7 @@ import java.util.List;
 public class PostSearchResDTO {
 
     public record response(
-            List<PostResDTO.postListItem> posts,
+            List<PostResDTO.PostListItem> posts,
             pagination pagination
     ) {}
 

@@ -37,7 +37,7 @@ public class UserController {
     @Operation(summary = "내 정보 조회", description = "JWT 토큰으로 인증된 유저의 정보를 반환합니다.")
     @GetMapping("/")
     public ApiResponse<?> getUser(@LoginUserId int userId) {
-        UserResDTO.userInfo userInfo = userService.get(userId);
+        UserResDTO.UserInfo userInfo = userService.get(userId);
 
         return ApiResponse.success("유저 조회 성공", userInfo);
     }

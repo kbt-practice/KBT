@@ -131,7 +131,7 @@ public class PostSearchService {
     }
 
     // ES 검색결과(postId 목록)로 MySQL에서 게시글 본문·작성자 정보를 가져와 화면에 필요한 카드 형태로 조립
-    private List<PostResDTO.postListItem> hydratePostCards(List<SearchHit<PostDocument>> hits) {
+    private List<PostResDTO.PostListItem> hydratePostCards(List<SearchHit<PostDocument>> hits) {
         List<Integer> orderedIds = hits.stream()
                 .map(hit -> hit.getContent().getPostId())
                 .toList();
@@ -147,19 +147,19 @@ public class PostSearchService {
         Map<Integer, UserProjection> authorMap = userRepository.findProjectionsByIdIn(authorIds).stream()
                 .collect(Collectors.toMap(UserProjection::id, Function.identity()));
 
-        Map<Integer, PostResDTO.postListItem> cards = new LinkedHashMap<>();
+        Map<Integer, PostResDTO.PostListItem> cards = new LinkedHashMap<>();
         orderedIds.forEach(postId -> {
             Post post = postMap.get(postId);
             if (post == null) return;
             UserProjection user = authorMap.get(post.getUserId());
-            cards.put(postId, new PostResDTO.postListItem(
+            cards.put(postId, new PostResDTO.PostListItem(
                     post.getPostId(),
                     post.getTitle(),
                     post.getPostImageUrl(),
                     post.getLikeCount(),
                     post.getCommentCount(),
                     post.getViewCount(),
-                    user == null ? null : new PostResDTO.userInfo(
+                    user == null ? null : new PostResDTO.UserInfo(
                             user.userId(), user.nickname(), user.profileImageUrl()
                     ),
                     post.getCreatedAt()

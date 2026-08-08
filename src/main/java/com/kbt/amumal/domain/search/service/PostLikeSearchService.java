@@ -30,7 +30,7 @@ public class PostLikeSearchService {
 
     // LIKE %keyword% 풀스캔으로 게시글을 찾아 카드 형태로 반환 (ES 없이도 동작하는 baseline 검색)
     @Transactional(readOnly = true)
-    public List<PostResDTO.postListItem> search(String keyword, int size) {
+    public List<PostResDTO.PostListItem> search(String keyword, int size) {
         if (keyword == null || keyword.isBlank())
             throw new CustomException(ErrorCode.BAD_REQUEST, "검색어를 입력해주세요.");
         if (size < MIN_SIZE || size > MAX_SIZE)
@@ -41,7 +41,7 @@ public class PostLikeSearchService {
     }
 
     // 조회된 게시글들의 작성자 정보를 한 번에 붙여 응답용 카드로 조립
-    private List<PostResDTO.postListItem> hydratePostCards(List<Post> posts) {
+    private List<PostResDTO.PostListItem> hydratePostCards(List<Post> posts) {
         List<Integer> authorIds = posts.stream().map(Post::getUserId).distinct().toList();
         Map<Integer, UserProjection> authorMap = userRepository.findProjectionsByIdIn(authorIds).stream()
                 .collect(Collectors.toMap(UserProjection::id, Function.identity()));
@@ -49,14 +49,14 @@ public class PostLikeSearchService {
         return posts.stream()
                 .map(post -> {
                     UserProjection user = authorMap.get(post.getUserId());
-                    return new PostResDTO.postListItem(
+                    return new PostResDTO.PostListItem(
                             post.getPostId(),
                             post.getTitle(),
                             post.getPostImageUrl(),
                             post.getLikeCount(),
                             post.getCommentCount(),
                             post.getViewCount(),
-                            user == null ? null : new PostResDTO.userInfo(
+                            user == null ? null : new PostResDTO.UserInfo(
                                     user.userId(), user.nickname(), user.profileImageUrl()
                             ),
                             post.getCreatedAt()

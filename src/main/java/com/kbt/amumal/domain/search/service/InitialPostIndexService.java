@@ -1,7 +1,7 @@
 package com.kbt.amumal.domain.search.service;
 
 import com.kbt.amumal.domain.comment.entity.Comment;
-import com.kbt.amumal.domain.comment.repository.commentRepository;
+import com.kbt.amumal.domain.comment.repository.CommentRepository;
 import com.kbt.amumal.domain.post.entity.Post;
 import com.kbt.amumal.domain.post.repository.PostRepository;
 import com.kbt.amumal.domain.search.document.PostDocument;
@@ -26,7 +26,7 @@ public class InitialPostIndexService {
     private static final int BATCH_SIZE = 500;
 
     private final PostRepository postRepository;
-    private final commentRepository commentRepository;
+    private final CommentRepository commentRepository;
     private final PostDocumentFactory documentFactory;
     private final PostSearchIndexGateway indexGateway;
 

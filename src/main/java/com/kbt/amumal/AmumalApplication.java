@@ -11,8 +11,8 @@ import java.util.TimeZone;
 @EnableJpaAuditing
 @EnableScheduling // 증분 배치 실행을 위한 설정
 public class AmumalApplication {
-	public static void main(String[] args) {
-		TimeZone.setDefault(TimeZone.getTimeZone("Asia/Seoul"));
-		SpringApplication.run(AmumalApplication.class, args);
-	}
+    public static void main(String[] args) {
+        TimeZone.setDefault(TimeZone.getTimeZone("Asia/Seoul"));
+        SpringApplication.run(AmumalApplication.class, args);
+    }
 }

@@ -2,7 +2,7 @@ package com.kbt.amumal.domain.comment.service;
 
 import com.kbt.amumal.domain.comment.dto.CommentReqDTO;
 import com.kbt.amumal.domain.comment.entity.Comment;
-import com.kbt.amumal.domain.comment.repository.commentRepository;
+import com.kbt.amumal.domain.comment.repository.CommentRepository;
 import com.kbt.amumal.domain.post.entity.Post;
 import com.kbt.amumal.domain.post.repository.PostRepository;
 import com.kbt.amumal.domain.search.service.SearchDirtyService;
@@ -17,13 +17,13 @@ import java.util.Objects;
 @Service
 @Transactional
 @RequiredArgsConstructor
-public class commentService {
-    private final commentRepository commentRepository;
+public class CommentService {
+    private final CommentRepository commentRepository;
     private final PostRepository postRepository;
     private final SearchDirtyService searchDirtyService;
 
     // 댓글 생성
-    public int create(int id, Integer postId, CommentReqDTO.createComment request) {
+    public int create(int id, Integer postId, CommentReqDTO.CreateComment request) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "게시글 또는 유저 정보를 확인해 주세요."));
 
@@ -42,7 +42,7 @@ public class commentService {
     }
 
     // 댓글 수정
-    public void update(int id, Integer commentId, CommentReqDTO.updateComment request) {
+    public void update(int id, Integer commentId, CommentReqDTO.UpdateComment request) {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "게시글 정보를 확인해주세요."));
 

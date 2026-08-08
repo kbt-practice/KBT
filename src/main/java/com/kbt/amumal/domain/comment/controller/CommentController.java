@@ -1,7 +1,7 @@
 package com.kbt.amumal.domain.comment.controller;
 
 import com.kbt.amumal.domain.comment.dto.CommentReqDTO;
-import com.kbt.amumal.domain.comment.service.commentService;
+import com.kbt.amumal.domain.comment.service.CommentService;
 import com.kbt.amumal.global.common.ApiResponse;
 import com.kbt.amumal.global.interceptor.LoginUserId;
 import io.swagger.v3.oas.annotations.Operation;
@@ -17,15 +17,15 @@ import java.util.Map;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/comments")
-public class commentController {
-    private final commentService commentService;
+public class CommentController {
+    private final CommentService commentService;
 
     @Operation(summary = "댓글 생성")
     @PostMapping("/{postId}")
     public ApiResponse<?> createComment(
             @LoginUserId int userId,
             @Parameter(description = "댓글을 달 게시글 ID") @PathVariable Integer postId,
-            @Valid @RequestBody CommentReqDTO.createComment request
+            @Valid @RequestBody CommentReqDTO.CreateComment request
     ) {
         int newCommentId = commentService.create(userId, postId, request);
 
@@ -37,7 +37,7 @@ public class commentController {
     public ApiResponse<?> updateComment(
             @LoginUserId int userId,
             @Parameter(description = "수정할 댓글 ID") @PathVariable Integer commentId,
-            @Valid @RequestBody CommentReqDTO.updateComment request
+            @Valid @RequestBody CommentReqDTO.UpdateComment request
     ) {
         commentService.update(userId, commentId, request);
 

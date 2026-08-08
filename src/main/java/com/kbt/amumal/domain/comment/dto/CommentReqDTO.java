@@ -5,12 +5,12 @@ import jakarta.validation.constraints.NotBlank;
 
 public class CommentReqDTO {
 
-    public record createComment(
+    public record CreateComment(
             @NotBlank(message = ValidationMessage.REQUIRED_COMMENT_CONTENT)
             String content
     ) {}
 
-    public record updateComment(
+    public record UpdateComment(
             @NotBlank(message = ValidationMessage.REQUIRED_COMMENT_CONTENT)
             String content
     ) {}

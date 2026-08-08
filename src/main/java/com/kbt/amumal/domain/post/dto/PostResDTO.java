@@ -5,41 +5,41 @@ import java.util.List;
 
 public class PostResDTO {
 
-    public record userInfo(String userId, String nickname, String profileImage) {}
+    public record UserInfo(String userId, String nickname, String profileImage) {}
 
-    public record postListItem(
+    public record PostListItem(
             Integer postId,
             String title,
             String postImage,
             long like,
             long comment,
             int view,
-            userInfo user,
+            UserInfo user,
             LocalDateTime createdAt
     ) {}
 
-    public record pagination(Integer nextCursor, boolean hasNext) {}
+    public record Pagination(Integer nextCursor, boolean hasNext) {}
 
-    public record postListResponse(List<postListItem> posts, pagination pagination) {}
+    public record PostListResponse(List<PostListItem> posts, Pagination pagination) {}
 
-    public record commentItem(
+    public record CommentItem(
             Integer commentId,
             String comment,
-            userInfo user,
+            UserInfo user,
             LocalDateTime createdAt
     ) {}
 
-    public record postDetailResponse(
+    public record PostDetailResponse(
             Integer postId,
             String title,
             String content,
             String postImage,
             long like,
             int view,
-            userInfo user,
+            UserInfo user,
             LocalDateTime createdAt,
-            List<commentItem> comments
+            List<CommentItem> comments
     ) {}
 
-    public record likeResult(String userId, Integer postId, String type) {}
+    public record LikeResult(String userId, Integer postId, String type) {}
 }

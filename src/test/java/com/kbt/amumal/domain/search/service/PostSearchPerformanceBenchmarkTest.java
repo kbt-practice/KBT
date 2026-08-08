@@ -164,7 +164,7 @@ class PostSearchPerformanceBenchmarkTest {
     private Set<Integer> searchByElasticsearch() {
         PostSearchResDTO.response response = postSearchService.search(KEYWORD, "latest", null, PAGE_SIZE);
         return response.posts().stream()
-                .map(PostResDTO.postListItem::postId)
+                .map(PostResDTO.PostListItem::postId)
                 .collect(Collectors.toSet());
     }
 

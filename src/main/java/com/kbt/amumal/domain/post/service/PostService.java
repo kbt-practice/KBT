@@ -1,7 +1,7 @@
 package com.kbt.amumal.domain.post.service;
 
 import com.kbt.amumal.domain.comment.entity.Comment;
-import com.kbt.amumal.domain.comment.repository.commentRepository;
+import com.kbt.amumal.domain.comment.repository.CommentRepository;
 import com.kbt.amumal.domain.post.dto.PostReqDTO;
 import com.kbt.amumal.domain.post.dto.PostResDTO;
 import com.kbt.amumal.domain.post.entity.Like;
@@ -34,12 +34,12 @@ import java.util.stream.Collectors;
 public class PostService {
     private final PostRepository postRepository;
     private final LikeRepository likeRepository;
-    private final commentRepository commentRepository;
+    private final CommentRepository commentRepository;
     private final UserRepository userRepository;
     private final ImageHandler fileService;
     private final SearchDirtyService searchDirtyService;
 
-    public int create(int id, PostReqDTO.createPost request, MultipartFile postImage) {
+    public int create(int id, PostReqDTO.CreatePost request, MultipartFile postImage) {
         String postImageUrl = uploadImageIfPresent(postImage);
 
         registerImageRollbackOnFailure(postImageUrl);
@@ -60,7 +60,7 @@ public class PostService {
         return newPost.getPostId();
     }
 
-    public void update(int id, Integer postId, PostReqDTO.updatePost request, MultipartFile postImage) {
+    public void update(int id, Integer postId, PostReqDTO.UpdatePost request, MultipartFile postImage) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
 
@@ -104,7 +104,7 @@ public class PostService {
         searchDirtyService.markDirty(postId);
     }
 
-    public PostResDTO.postDetailResponse get(Integer postId) {
+    public PostResDTO.PostDetailResponse get(Integer postId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
 
@@ -131,32 +131,32 @@ public class PostService {
 
         UserProjection author = userMap.get(post.getUserId());
 
-        List<PostResDTO.commentItem> commentItems = comments.stream()
+        List<PostResDTO.CommentItem> commentItems = comments.stream()
                 .map(comment -> {
                     UserProjection commenter = userMap.get(comment.getUserId());
-                    return new PostResDTO.commentItem(
+                    return new PostResDTO.CommentItem(
                             comment.getCommentId(),
                             comment.getContent(),
-                            commenter != null ? new PostResDTO.userInfo(commenter.userId(), commenter.nickname(), commenter.profileImageUrl()) : null,
+                            commenter != null ? new PostResDTO.UserInfo(commenter.userId(), commenter.nickname(), commenter.profileImageUrl()) : null,
                             comment.getCreatedAt()
                     );
                 })
                 .collect(Collectors.toList());
 
-        return new PostResDTO.postDetailResponse(
+        return new PostResDTO.PostDetailResponse(
                 post.getPostId(),
                 post.getTitle(),
                 post.getContent(),
                 post.getPostImageUrl(),
                 likeCount,
                 post.getViewCount(),
-                author != null ? new PostResDTO.userInfo(author.userId(), author.nickname(), author.profileImageUrl()) : null,
+                author != null ? new PostResDTO.UserInfo(author.userId(), author.nickname(), author.profileImageUrl()) : null,
                 post.getCreatedAt(),
                 commentItems
         );
     }
 
-    public PostResDTO.postListResponse getList(Integer cursor, int size) {
+    public PostResDTO.PostListResponse getList(Integer cursor, int size) {
         List<Post> posts = postRepository.findPostsWithCursor(cursor, size + 1);
 
         boolean hasNext = posts.size() > size;
@@ -171,28 +171,28 @@ public class PostService {
         Map<Integer, UserProjection> authorMap = userRepository.findProjectionsByIdIn(authorIds).stream()
                 .collect(Collectors.toMap(UserProjection::id, u -> u));
 
-        List<PostResDTO.postListItem> items = posts.stream().map(post -> {
+        List<PostResDTO.PostListItem> items = posts.stream().map(post -> {
             UserProjection user = authorMap.get(post.getUserId());
             // 좋아요·댓글 수 비정규화: Like/Comment 테이블 COUNT 대신 Post에 저장된 값을 그대로 사용
             long likeCount = post.getLikeCount();
             long commentCount = post.getCommentCount();
 
-            return new PostResDTO.postListItem(
+            return new PostResDTO.PostListItem(
                     post.getPostId(),
                     post.getTitle(),
                     post.getPostImageUrl(),
                     likeCount,
                     commentCount,
                     post.getViewCount(),
-                    user != null ? new PostResDTO.userInfo(user.userId(), user.nickname(), user.profileImageUrl()) : null,
+                    user != null ? new PostResDTO.UserInfo(user.userId(), user.nickname(), user.profileImageUrl()) : null,
                     post.getCreatedAt()
             );
         }).collect(Collectors.toList());
 
-        return new PostResDTO.postListResponse(items, new PostResDTO.pagination(nextCursor, hasNext));
+        return new PostResDTO.PostListResponse(items, new PostResDTO.Pagination(nextCursor, hasNext));
     }
 
-    public PostResDTO.likeResult toggleLike(int id, Integer postId) {
+    public PostResDTO.LikeResult toggleLike(int id, Integer postId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
 
@@ -213,7 +213,7 @@ public class PostService {
             type = "CREATE";
         }
 
-        return new PostResDTO.likeResult(user.getUserId(), postId, type);
+        return new PostResDTO.LikeResult(user.getUserId(), postId, type);
     }
 
     private String uploadImageIfPresent(MultipartFile file) {

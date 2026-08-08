@@ -1,6 +1,6 @@
 package com.kbt.amumal.global.common;
 
-import com.kbt.amumal.domain.comment.repository.commentRepository;
+import com.kbt.amumal.domain.comment.repository.CommentRepository;
 import com.kbt.amumal.domain.post.entity.Post;
 import com.kbt.amumal.domain.post.repository.LikeRepository;
 import com.kbt.amumal.domain.post.repository.PostRepository;
@@ -32,7 +32,7 @@ public class RetentionScheduler {
 
     private final UserRepository userRepository;
     private final PostRepository postRepository;
-    private final commentRepository commentRepository;
+    private final CommentRepository commentRepository;
     private final LikeRepository likeRepository;
     private final ImageHandler imageHandler;
     private final SearchDirtyService searchDirtyService;

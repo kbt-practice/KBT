@@ -1,0 +1,10 @@
+apiVersion: v2
+name: amumal-eck-operator
+description: ECK (Elastic Cloud on Kubernetes) operator
+type: application
+version: 0.1.0
+appVersion: "3.5.0"
+dependencies:
+  - name: eck-operator
+    version: 3.5.0
+    repository: https://helm.elastic.co

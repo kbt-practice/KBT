@@ -1,0 +1,57 @@
+# =====================================================================
+# eck-elasticsearch 0.20.0
+#  - backend(backend-ns)와 다른 네임스페이스(es-ns)에 있어 ECK가 만드는 elastic 유저 Secret을 backend가 못 참조한다.
+#    클러스터 내부 통신만 쓰는 전제로 X-Pack 보안(인증/TLS)을 아예 비활성화해 이 문제를 피한다.
+# =====================================================================
+eck-elasticsearch:
+  fullnameOverride: amumal-search
+  version: 9.4.2
+  image: mingkiboo/amumal-es-nori:9.4.2
+
+  http:
+    service:
+      spec:
+        type: ClusterIP
+
+  volumeClaimDeletePolicy: DeleteOnScaledownOnly
+
+  nodeSets:
+    - name: default
+      count: 1
+      config:
+        node.store.allow_mmap: false
+        xpack.security.enabled: false
+        xpack.security.http.ssl.enabled: false
+        xpack.security.transport.ssl.enabled: false
+      podTemplate:
+        spec:
+          # regcred는 backend-ns에 있는 Secret이라 여기서 못 쓴다 (Secret은 네임스페이스 간 참조 불가).
+          # es-ns에 동일한 이름으로 별도 생성해서 쓴다 (kubectl로 수동 생성, git에는 안 커밋).
+          imagePullSecrets:
+            - name: regcred
+          # 컨테이너 레벨(allowPrivilegeEscalation/capabilities/readOnlyRootFilesystem)은
+          # ES 8.8+부터 ECK가 기본으로 넣어줘서 여기선 ECK가 안 채워주는 pod 레벨만 명시한다.
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            fsGroup: 1000
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: elasticsearch
+              resources:
+                requests:
+                  cpu: 500m
+                  memory: 2Gi
+                limits:
+                  cpu: "2"
+                  memory: 2Gi
+      volumeClaimTemplates:
+        - metadata:
+            name: elasticsearch-data
+          spec:
+            accessModes:
+              - ReadWriteOnce
+            resources:
+              requests:
+                storage: 20Gi

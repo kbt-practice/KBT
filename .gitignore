@@ -44,6 +44,8 @@ tmp/
 *.seed
 *.tmp
 argocd/monitoring-chart/charts/
+argocd/elasticsearch-chart/charts/
+argocd/eck-operator-chart/charts/
 
 # Secrets and certificates
 *.pem

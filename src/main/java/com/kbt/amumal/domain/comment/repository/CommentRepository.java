@@ -11,6 +11,7 @@ import java.util.List;
 
 public interface CommentRepository extends JpaRepository<Comment, Integer> {
     List<Comment> findByPostIdAndDeletedAtIsNullOrderByCreatedAtAsc(int postId);
+    List<Comment> findByPostIdInAndDeletedAtIsNullOrderByPostIdAscCreatedAtAsc(List<Integer> postIds);
     void deleteByPostId(int postId);
 
     // N+1 방지: 여러 게시글의 댓글 수를 DTO Projection으로 한 번에 조회

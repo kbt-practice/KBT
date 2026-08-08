@@ -1,0 +1,18 @@
+# =====================================================================
+# eck-operator 3.5.0
+# =====================================================================
+eck-operator:
+  installCRDs: true
+  replicaCount: 1
+  managedNamespaces:
+    - es-ns
+  resources:
+    requests:
+      cpu: 100m
+      memory: 150Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  config:
+    metrics:
+      port: "0"

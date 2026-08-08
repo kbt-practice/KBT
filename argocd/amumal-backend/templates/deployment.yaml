@@ -44,6 +44,13 @@ spec:
           envFrom:
             - secretRef:
                 name: {{ .Values.envSecret }}
+          env:
+            # ES가 다른 네임스페이스(es-ns)에 있어 FQDN으로 접근한다.
+            # X-Pack 보안을 꺼둔 내부 통신이라 인증 정보는 필요 없다 (argocd/elasticsearch-chart/values.yaml 참고).
+            - name: ES_HOST
+              value: amumal-search-es-http.es-ns.svc.cluster.local
+            - name: ES_PORT
+              value: "9200"
           lifecycle:
             preStop:
               exec:

@@ -1,0 +1,36 @@
+{
+  "number_of_shards": "1",
+  "number_of_replicas": "0",
+  "analysis": {
+    "tokenizer": {
+      "nori_mixed_tokenizer": {
+        "type": "nori_tokenizer",
+        "decompound_mode": "mixed",
+        "discard_punctuation": "true"
+      }
+    },
+    "filter": {
+      "nori_pos_filter": {
+        "type": "nori_part_of_speech",
+        "stoptags": [
+          "EP", "EF", "EC", "ETN", "ETM",
+          "IC",
+          "JKS", "JKC", "JKG", "JKO", "JKB", "JKV", "JKQ", "JX", "JC",
+          "MAG", "MAJ", "MM",
+          "SP", "SSC", "SSO", "SC", "SE",
+          "XPN", "XSA", "XSN", "XSV", "UNA", "NA", "VSV"
+        ]
+      },
+      "nori_reading_filter": {
+        "type": "nori_readingform"
+      }
+    },
+    "analyzer": {
+      "korean_nori": {
+        "type": "custom",
+        "tokenizer": "nori_mixed_tokenizer",
+        "filter": ["nori_pos_filter", "nori_reading_filter", "lowercase"]
+      }
+    }
+  }
+}

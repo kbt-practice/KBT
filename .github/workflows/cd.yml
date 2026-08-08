@@ -15,6 +15,8 @@ permissions:
 
 env:
   IMAGE_NAME: mingkiboo/amumal-amon
+  ES_IMAGE_NAME: mingkiboo/amumal-es-nori
+  ES_VERSION: 9.4.2
 
 ## Docker blue/green
 #jobs:
@@ -131,6 +133,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: docker/elasticsearch 변경 감지
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            es:
+              - 'docker/elasticsearch/**'
       - name: Docker Hub 로그인
         uses: docker/login-action@v3
         with:
@@ -140,6 +151,16 @@ jobs:
         run: |
           docker build -t ${{ env.IMAGE_NAME }}:${{ github.sha }} .
           docker push ${{ env.IMAGE_NAME }}:${{ github.sha }}
+      # docker/elasticsearch 경로가 바뀔 때만 빌드/push (ES_VERSION 태그 고정이라 매번 돌리면 낭비)
+      - name: Nori Elasticsearch 이미지 빌드 & push
+        if: steps.filter.outputs.es == 'true'
+        run: |
+          docker build \
+            --build-arg ES_VERSION=${{ env.ES_VERSION }} \
+            -f docker/elasticsearch/Dockerfile \
+            -t ${{ env.ES_IMAGE_NAME }}:${{ env.ES_VERSION }} \
+            .
+          docker push ${{ env.ES_IMAGE_NAME }}:${{ env.ES_VERSION }}
 
   update-manifest:
     needs: build-push

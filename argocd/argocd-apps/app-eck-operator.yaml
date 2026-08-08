@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: eck-operator
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/kbt-practice/KBT.git
+    targetRevision: main
+    path: argocd/eck-operator-chart
+    helm:
+      releaseName: eck-operator
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: elastic-system
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+    automated:
+      # ECK CRD 삭제는 클러스터의 모든 Elastic 리소스를 제거할 수 있어 prune하지 않는다.
+      prune: false
+      selfHeal: true

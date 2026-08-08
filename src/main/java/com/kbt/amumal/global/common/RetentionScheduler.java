@@ -4,6 +4,7 @@ import com.kbt.amumal.domain.comment.repository.CommentRepository;
 import com.kbt.amumal.domain.post.entity.Post;
 import com.kbt.amumal.domain.post.repository.LikeRepository;
 import com.kbt.amumal.domain.post.repository.PostRepository;
+import com.kbt.amumal.domain.search.service.SearchDirtyService;
 import com.kbt.amumal.domain.user.entity.User;
 import com.kbt.amumal.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +35,7 @@ public class RetentionScheduler {
     private final CommentRepository commentRepository;
     private final LikeRepository likeRepository;
     private final ImageHandler imageHandler;
+    private final SearchDirtyService searchDirtyService;
 
     /**
      * 소프트 딜리트된 지 30일 이상 된 게시글의 이미지 파일을 디스크에서 삭제한다.
@@ -100,6 +102,7 @@ public class RetentionScheduler {
         // 유저 게시글 정리: 댓글·좋아요 먼저 삭제 후 게시글 삭제
         List<Post> userPosts = postRepository.findByUserId(user.getId());
         for (Post post : userPosts) {
+            searchDirtyService.markDirty(post.getPostId());
             imageHandler.deleteSafely(post.getPostImageUrl());
             commentRepository.deleteByPostId(post.getPostId());
             likeRepository.deleteByPostId(post.getPostId());
